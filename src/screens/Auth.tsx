@@ -2,16 +2,11 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../lib/auth";
-import { Icon } from "../components/ui";
 
 const redirectTo = () => window.location.origin + window.location.pathname;
 
 function Brand() {
-  return (
-    <div style={{ width: 56, height: 56, borderRadius: 18, background: "var(--scarlet)", display: "grid", placeItems: "center" }}>
-      <Icon name="book" size={28} color="#FFF3E6" />
-    </div>
-  );
+  return <img src={import.meta.env.BASE_URL + "icon.svg"} width={64} height={64} alt="" style={{ borderRadius: 16 }} />;
 }
 
 export function SignUp() {
