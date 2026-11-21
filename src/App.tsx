@@ -1,0 +1,74 @@
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { useAuth } from "./lib/auth";
+import { Spinner, TabBar } from "./components/ui";
+import { SignUp, LogIn, ResetPassword, SetNewPassword } from "./screens/Auth";
+import Library from "./screens/Library";
+import AddText from "./screens/AddText";
+import Session from "./screens/Session";
+import Grammar from "./screens/Grammar";
+import Rule from "./screens/Rule";
+import Practice from "./screens/Practice";
+import Reference from "./screens/Reference";
+import Conjugation from "./screens/Conjugation";
+import Irregular from "./screens/Irregular";
+import Translate from "./screens/Translate";
+import Progress from "./screens/Progress";
+import MyWords from "./screens/MyWords";
+import Review from "./screens/Review";
+import Profile from "./screens/Profile";
+import Privacy from "./screens/Privacy";
+import ConsentHistory from "./screens/ConsentHistory";
+
+const NO_TABS = ["/session", "/review", "/add", "/privacy", "/consents", "/practice"];
+
+export default function App() {
+  const { session, loading, recovering } = useAuth();
+  const loc = useLocation();
+
+  if (loading)
+    return (
+      <div className="app" style={{ display: "grid", placeItems: "center", minHeight: "100vh" }}>
+        <Spinner />
+      </div>
+    );
+
+  if (recovering) return <div className="app"><SetNewPassword /></div>;
+
+  if (!session)
+    return (
+      <div className="app">
+        <Routes>
+          <Route path="/login" element={<LogIn />} />
+          <Route path="/reset" element={<ResetPassword />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="*" element={<SignUp />} />
+        </Routes>
+      </div>
+    );
+
+  const showTabs = !NO_TABS.some((p) => loc.pathname.startsWith(p));
+  return (
+    <div className="app">
+      <Routes>
+        <Route path="/" element={<Library />} />
+        <Route path="/add" element={<AddText />} />
+        <Route path="/session/:id" element={<Session />} />
+        <Route path="/grammar" element={<Grammar />} />
+        <Route path="/grammar/:id" element={<Rule />} />
+        <Route path="/practice/:id" element={<Practice />} />
+        <Route path="/reference" element={<Reference />} />
+        <Route path="/reference/verb/:verb" element={<Conjugation />} />
+        <Route path="/reference/irregular" element={<Irregular />} />
+        <Route path="/reference/translate" element={<Translate />} />
+        <Route path="/progress" element={<Progress />} />
+        <Route path="/words" element={<MyWords />} />
+        <Route path="/review/:mode" element={<Review />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/consents" element={<ConsentHistory />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+      {showTabs && <TabBar />}
+    </div>
+  );
+}
