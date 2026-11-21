@@ -68,6 +68,7 @@ export function SignUp() {
       {err && <p className="err">{err}</p>}
       <button className="btn primary" disabled={busy}>{busy ? "Creating…" : "Create account"}</button>
       <p className="center small muted">Already have an account? <Link to="/login" style={{ fontWeight: 600 }}>Log in</Link></p>
+      <p className="center small muted"><Link to="/reset">Forgot your password?</Link></p>
     </form>
   );
 }
@@ -108,6 +109,11 @@ export function ResetPassword() {
   const [err, setErr] = useState("");
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    try {
+      localStorage.setItem("pw-reset-requested", String(Date.now()));
+    } catch {
+      /* storage unavailable */
+    }
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: redirectTo() });
     if (error) setErr(error.message);
     else setDone(true);
@@ -116,8 +122,9 @@ export function ResetPassword() {
     <form className="screen" onSubmit={submit}>
       <Brand />
       <h1>Reset password</h1>
+      {!done && <p className="muted small">Enter the email you signed up with. We’ll send you a link to choose a new password.</p>}
       {done ? (
-        <p className="muted">If an account exists for {email}, you’ll get an email with a reset link.</p>
+        <p className="muted">If an account exists for {email}, you’ll get an email with a reset link. Open it on this device to choose a new password.</p>
       ) : (
         <>
           <label className="field"><span>Email</span><input className="input" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></label>
@@ -130,21 +137,35 @@ export function ResetPassword() {
   );
 }
 
-export function SetNewPassword() {
+export function SetNewPassword({ onDone }: { onDone?: () => void } = {}) {
   const { setRecovering } = useAuth();
+  const [saved, setSaved] = useState(false);
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password.length < 8) return setErr("Use at least 8 characters.");
     const { error } = await supabase.auth.updateUser({ password });
-    if (error) setErr(error.message);
-    else setRecovering(false);
+    if (error) return setErr(error.message);
+    setSaved(true);
+    setTimeout(() => {
+      setRecovering(false);
+      onDone?.();
+    }, 1200);
   };
+  if (saved)
+    return (
+      <div className="screen">
+        <Brand />
+        <h1>Password saved</h1>
+        <p className="muted">You’re signed in with your new password.</p>
+      </div>
+    );
   return (
     <form className="screen" onSubmit={submit}>
       <Brand />
       <h1>New password</h1>
+      <p className="muted small">Choose a new password with at least 8 characters.</p>
       <label className="field"><span>New password</span><input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" /></label>
       {err && <p className="err">{err}</p>}
       <button className="btn primary">Save password</button>

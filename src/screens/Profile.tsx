@@ -14,6 +14,9 @@ export default function Profile() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [typed, setTyped] = useState("");
   const [busy, setBusy] = useState(false);
+  const [pwOpen, setPwOpen] = useState(false);
+  const [pw, setPw] = useState("");
+  const [pwMsg, setPwMsg] = useState("");
   const nav = useNavigate();
 
   useEffect(() => {
@@ -87,6 +90,7 @@ export default function Profile() {
 
       <span className="label">Settings</span>
       <div className="card flat">
+        <Row t="Change password" right={chev} onClick={() => setPwOpen(true)} />
         <Row t="Daily goal" right={<select className="chip" style={{ fontSize: 13, padding: "6px 8px" }} value={goal} onChange={(e) => saveGoal(Number(e.target.value))}>{GOALS.map((g) => <option key={g} value={g}>{g} min</option>)}</select>} />
       </div>
 
@@ -109,6 +113,19 @@ export default function Profile() {
         <Row t="Delete account and all data" s="This can’t be undone" color="var(--scarlet)" onClick={() => setConfirmDelete(true)} />
       </div>
 
+      {pwOpen && (
+        <Modal onClose={() => { setPwOpen(false); setPw(""); setPwMsg(""); }}>
+          <h2>Change password</h2>
+          <input className="input" type="password" placeholder="New password, 8+ characters" value={pw} onChange={(e) => setPw(e.target.value)} autoComplete="new-password" />
+          {pwMsg && <p className={pwMsg === "Password changed" ? "small" : "err"}>{pwMsg}</p>}
+          <button className="btn primary" onClick={async () => {
+            if (pw.length < 8) return setPwMsg("Use at least 8 characters.");
+            const { error } = await supabase.auth.updateUser({ password: pw });
+            setPwMsg(error ? error.message : "Password changed");
+            if (!error) setTimeout(() => { setPwOpen(false); setPw(""); setPwMsg(""); }, 1000);
+          }}>Save</button>
+        </Modal>
+      )}
       {confirmDelete && (
         <Modal onClose={() => setConfirmDelete(false)}>
           <h2>Delete your account?</h2>

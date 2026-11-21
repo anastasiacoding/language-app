@@ -31,9 +31,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(data.session);
       setLoading(false);
     });
+    // A reset link signs the user in. With the PKCE flow the event may arrive as SIGNED_IN,
+    // so we also remember on this device that a reset was requested.
+    const cameFromLink = new URLSearchParams(window.location.search).has("code");
     const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s);
-      if (event === "PASSWORD_RECOVERY") setRecovering(true);
+      let requested = 0;
+      try {
+        requested = Number(localStorage.getItem("pw-reset-requested") || 0);
+      } catch {
+        /* storage unavailable */
+      }
+      const recent = requested && Date.now() - requested < 2 * 3600 * 1000;
+      if (event === "PASSWORD_RECOVERY" || (event === "SIGNED_IN" && cameFromLink && recent)) {
+        setRecovering(true);
+        try {
+          localStorage.removeItem("pw-reset-requested");
+        } catch {
+          /* ignore */
+        }
+      }
     });
     return () => sub.subscription.unsubscribe();
   }, []);
