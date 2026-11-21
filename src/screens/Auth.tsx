@@ -6,7 +6,7 @@ import { useAuth } from "../lib/auth";
 const redirectTo = () => window.location.origin + window.location.pathname;
 
 function Brand() {
-  return <img src={import.meta.env.BASE_URL + "icon.svg"} width={64} height={64} alt="" style={{ borderRadius: 16 }} />;
+  return <img src={import.meta.env.BASE_URL + "app-icon.svg"} width={64} height={64} alt="" style={{ borderRadius: 16 }} />;
 }
 
 export function SignUp() {
