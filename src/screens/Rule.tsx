@@ -1,8 +1,7 @@
 import { Link, useParams } from "react-router-dom";
 import { RULE_MAP } from "../data/rules";
 import { useFavorites } from "../lib/favorites";
-import { speak } from "../lib/speech";
-import { Header, Icon, Star } from "../components/ui";
+import { Header, Star } from "../components/ui";
 
 export default function Rule() {
   const { id } = useParams();
@@ -28,7 +27,6 @@ export default function Rule() {
         {r.examples.map(([fr, en]) => (
           <div key={fr} className="row" style={{ alignItems: "flex-start" }}>
             <div className="grow"><p style={{ fontWeight: 500 }}>{fr}</p><p className="small muted">{en}</p></div>
-            <button className="icon-btn" onClick={() => speak(fr)} aria-label="Listen"><Icon name="speaker" size={18} color="#B9592D" /></button>
           </div>
         ))}
       </div>

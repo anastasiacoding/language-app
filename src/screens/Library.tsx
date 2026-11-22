@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase, type TextRow, type SessionRow } from "../lib/supabase";
 import { useAuth } from "../lib/auth";
-import { Icon, Progress, Spinner } from "../components/ui";
+import { Icon, Modal, Progress, Spinner } from "../components/ui";
 import { splitPassages } from "../lib/score";
 import { streakDays, minutesToday } from "../lib/stats";
 
@@ -16,6 +16,15 @@ export default function Library() {
   const [texts, setTexts] = useState<TextRow[] | null>(null);
   const [sessions, setSessions] = useState<SessionRow[]>([]);
   const nav = useNavigate();
+  const [toDelete, setToDelete] = useState<TextRow | null>(null);
+
+  const remove = async () => {
+    if (!toDelete) return;
+    // sessions and saved words keep their scores: their text_id is set to null in the database
+    await supabase.from("texts").delete().eq("id", toDelete.id);
+    setTexts((t) => (t ?? []).filter((x) => x.id !== toDelete.id));
+    setToDelete(null);
+  };
 
   useEffect(() => {
     (async () => {
@@ -64,7 +73,12 @@ export default function Library() {
             const pct = passages.length ? Math.round((Math.min(t.passage_index, passages.length) / passages.length) * 100) : 0;
             return (
               <button key={t.id} className="card" style={{ textAlign: "left", cursor: "pointer", gap: 8 }} onClick={() => nav(`/session/${t.id}`)}>
-                <h3 style={{ fontSize: 15 }}>{t.title}</h3>
+                <div className="row" style={{ alignItems: "flex-start" }}>
+                  <h3 className="grow" style={{ fontSize: 15 }}>{t.title}</h3>
+                  <span role="button" aria-label={`Delete ${t.title}`} className="icon-btn" style={{ margin: "-4px -6px 0 0" }} onClick={(e) => { e.stopPropagation(); setToDelete(t); }}>
+                    <Icon name="trash" size={18} color="#6B5850" />
+                  </span>
+                </div>
                 <p className="small muted" style={{ fontStyle: "italic", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                   {t.content.slice(0, 160)}
                 </p>
@@ -85,6 +99,14 @@ export default function Library() {
             );
           })}
         </>
+      )}
+      {toDelete && (
+        <Modal onClose={() => setToDelete(null)}>
+          <h2>Delete this text?</h2>
+          <p className="small">“{toDelete.title}” will be removed from your library. Your scores, streak and saved words stay in Progress.</p>
+          <button className="btn primary" onClick={remove}>Delete text</button>
+          <button className="btn" onClick={() => setToDelete(null)}>Cancel</button>
+        </Modal>
       )}
     </div>
   );

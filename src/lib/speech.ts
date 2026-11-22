@@ -1,15 +1,14 @@
 // Thin wrapper around the browser's Web Speech API.
 // Chrome/Android uses Google's service; Safari/iOS uses Apple's. We only ever receive text.
 
-type Rec = any;
-
 export function speechSupported(): boolean {
   const w = window as any;
   return !!(w.SpeechRecognition || w.webkitSpeechRecognition);
 }
 
 export interface Recorder {
-  stop: () => void;
+  /** Stops listening and resolves with everything heard, waiting briefly for the last words. */
+  stop: () => Promise<string>;
 }
 
 /**
@@ -24,8 +23,10 @@ export function startRecognition(
   const w = window as any;
   const SR = w.SpeechRecognition || w.webkitSpeechRecognition;
   let finalText = "";
+  let interim = "";
   let stopped = false;
-  let rec: Rec = null;
+  let rec: any = null;
+  let endWaiter: (() => void) | null = null;
 
   const begin = () => {
     rec = new SR();
@@ -34,13 +35,14 @@ export function startRecognition(
     rec.interimResults = true;
     rec.maxAlternatives = 1;
     rec.onresult = (e: any) => {
-      let interim = "";
+      let live = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const r = e.results[i];
         if (r.isFinal) finalText += (finalText ? " " : "") + r[0].transcript.trim();
-        else interim += r[0].transcript;
+        else live += r[0].transcript;
       }
-      onUpdate(finalText, interim.trim());
+      interim = live.trim();
+      onUpdate(finalText, interim);
     };
     rec.onerror = (e: any) => {
       if (e.error === "no-speech" || e.error === "aborted") return;
@@ -52,12 +54,14 @@ export function startRecognition(
       onError?.("Speech recognition error: " + e.error);
     };
     rec.onend = () => {
-      if (!stopped) {
-        try {
-          begin();
-        } catch {
-          /* ignore */
-        }
+      if (stopped) {
+        endWaiter?.();
+        return;
+      }
+      try {
+        begin();
+      } catch {
+        /* ignore */
       }
     };
     rec.start();
@@ -65,29 +69,27 @@ export function startRecognition(
 
   try {
     begin();
-  } catch (e: any) {
+  } catch {
     onError?.("Could not start the microphone.");
   }
 
   return {
-    stop: () => {
-      stopped = true;
-      try {
-        rec?.stop();
-      } catch {
-        /* ignore */
-      }
-    },
+    stop: () =>
+      new Promise<string>((resolve) => {
+        const done = () => {
+          endWaiter = null;
+          resolve((finalText + " " + interim).trim());
+        };
+        if (stopped) return done();
+        stopped = true;
+        endWaiter = done;
+        // Safari often delivers the last words only after stop(), so wait for onend (max 1.5 s).
+        setTimeout(() => endWaiter && done(), 1500);
+        try {
+          rec?.stop();
+        } catch {
+          done();
+        }
+      }),
   };
-}
-
-export function speak(text: string, lang = "fr-FR") {
-  if (!("speechSynthesis" in window)) return;
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = lang;
-  u.rate = 0.9;
-  const v = window.speechSynthesis.getVoices().find((x) => x.lang?.toLowerCase().startsWith(lang.slice(0, 2)));
-  if (v) u.voice = v;
-  window.speechSynthesis.speak(u);
 }

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { supabase, latestConsents, setConsent, saveWords, type TextRow } from "../lib/supabase";
-import { speechSupported, startRecognition, speak, type Recorder } from "../lib/speech";
+import { speechSupported, startRecognition, type Recorder } from "../lib/speech";
 import { scoreReading, scoreRetelling, scoreTranslation, splitPassages, tokenize } from "../lib/score";
 import { translateFrEn, translateLong } from "../lib/translate";
 import { Header, Icon, Spinner, Steps, Wave } from "../components/ui";
@@ -54,7 +54,9 @@ export default function Session() {
       const c = await latestConsents();
       setVoiceOk(!!c.voice);
     })();
-    return () => recRef.current?.stop();
+    return () => {
+      recRef.current?.stop();
+    };
   }, [id]);
 
   useEffect(() => {
@@ -77,13 +79,22 @@ export default function Session() {
     setElapsed(0);
   };
 
-  const toggle = (lang: string, onDone: (said: string) => void) => {
-    if (recording) {
-      recRef.current?.stop();
-      setRecording(false);
-      const said = (heard + " " + interim).trim();
-      setInterim("");
-      onDone(said);
+  const finishing = useRef(false);
+  const stopAndFinish = async (onDone: (said: string) => void) => {
+    if (finishing.current) return;
+    finishing.current = true;
+    setRecording(false);
+    const said = (await recRef.current?.stop()) ?? "";
+    recRef.current = null;
+    setInterim("");
+    setHeard(said);
+    finishing.current = false;
+    onDone(said);
+  };
+
+  const toggle = (lang: string, onDone: (said: string) => void, autoDone?: (said: string) => boolean) => {
+    if (recording || recRef.current) {
+      stopAndFinish(onDone);
       return;
     }
     resetCapture();
@@ -94,12 +105,21 @@ export default function Session() {
       (f, i) => {
         setHeard(f);
         setInterim(i);
+        if (autoDone && autoDone((f + " " + i).trim())) stopAndFinish(onDone);
       },
       (msg) => {
         setErr(msg);
         setRecording(false);
+        recRef.current = null;
       },
     );
+  };
+
+  /** Stops on its own once the last words of the passage have been read. */
+  const readToEnd = (said: string) => {
+    const r = scoreReading(passage, said);
+    const n = r.words.length;
+    return n > 3 && r.words[n - 1].ok && r.words[n - 2].ok && r.score >= 40;
   };
 
   const finishReading = (said: string) => {
@@ -222,11 +242,11 @@ export default function Session() {
 
       {step === "read" && (
         <>
-          <div className="card reading">
+          <div className="card reading" style={{ maxHeight: reading ? "none" : "calc(100vh - 380px)", overflowY: "auto" }}>
             <p>
               {chunks.map((c, i) => (
                 <span key={i}>
-                  <span className={"w " + (reading ? (reading.bad.has(i) ? "bad" : "good") : "")} onClick={() => speak(cleanWord(c))}>{c}</span>{" "}
+                  <span className={"w " + (reading ? (reading.bad.has(i) ? "bad" : "good") : "")}>{c}</span>{" "}
                 </span>
               ))}
             </p>
@@ -235,7 +255,7 @@ export default function Session() {
             <>
               <div className="card tint row between">
                 <div><b style={{ fontSize: 22 }}>{reading.score}%</b> <span className="small muted">reading accuracy</span></div>
-                <span className="xs muted">tap a word to hear it</span>
+                <span className="row xs muted" style={{ gap: 6 }}><span style={{ width: 16, height: 2, background: "var(--scarlet)" }} />to practice</span>
               </div>
               <div className="row" style={{ gap: 10 }}>
                 <button className="btn" onClick={() => { setReading(null); resetCapture(); }}><Icon name="refresh" size={18} /> Again</button>
@@ -245,21 +265,18 @@ export default function Session() {
           ) : (
             <>
               {live && <p className="small muted" style={{ fontStyle: "italic" }}>“{live}”</p>}
-              <div className="row small muted" style={{ gap: 14 }}>
-                <span className="row" style={{ gap: 6 }}><span style={{ width: 16, height: 2, background: "var(--scarlet)" }} />mispronounced</span>
-                <span>tap a word to hear it</span>
-              </div>
+
               {!supported && <button className="btn" onClick={() => setStep("translate")}>Skip to translation</button>}
             </>
           )}
           {err && <p className="err">{err}</p>}
-          {!reading && supported && <MicDock recording={recording} onToggle={() => toggle("fr-FR", finishReading)} hint={recording ? `${timer} · tap to finish` : "Tap and read the passage aloud"} />}
+          {!reading && supported && <MicDock recording={recording} onToggle={() => toggle("fr-FR", finishReading, readToEnd)} hint={recording ? `${timer} · stops by itself at the end, or tap` : "Tap and read the passage aloud"} />}
         </>
       )}
 
       {step === "translate" && (
         <>
-          <div className="card">
+          <div className="card" style={{ maxHeight: translation ? "none" : "calc(100vh - 380px)", overflowY: "auto" }}>
             <span className="label">Original · tap words you didn’t know</span>
             <p className="reading" style={{ fontSize: 17 }}>
               {chunks.map((c, i) => (
@@ -353,7 +370,6 @@ export default function Session() {
               <div className="card flat">
                 {practiceWords.map((w) => (
                   <div className="list-row" key={w.word}>
-                    <button className="icon-btn" onClick={() => speak(w.word)} aria-label={`Hear ${w.word}`}><Icon name="speaker" size={20} color="#B9592D" /></button>
                     <div className="grow"><div className="t">{w.word}</div><div className="s">{w.translation}</div></div>
                     <span className={"chip" + (w.reason === "pronunciation" ? " red" : "")}>{w.reason === "pronunciation" ? "pronunciation" : "meaning"}</span>
                   </div>

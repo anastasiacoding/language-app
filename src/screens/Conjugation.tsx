@@ -2,8 +2,7 @@ import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { conjugate, TENSES, type Tense } from "../lib/conjugate";
 import { useFavorites } from "../lib/favorites";
-import { speak } from "../lib/speech";
-import { Header, Icon, Star } from "../components/ui";
+import { Header, Star } from "../components/ui";
 
 export default function Conjugation() {
   const { verb } = useParams();
@@ -36,7 +35,6 @@ export default function Conjugation() {
         <div className="card" key={t.id} style={{ padding: 16, gap: 6 }}>
           <div className="row between">
             <h3>{t.label}</h3>
-            <button className="icon-btn" onClick={() => speak(c.forms[t.id].filter(Boolean).join(". ").replace(/ \/ elle/g, "").replace(/ \/ elles/g, ""))} aria-label="Listen"><Icon name="speaker" size={18} color="#B9592D" /></button>
           </div>
           <table className="table">
             <tbody>

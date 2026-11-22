@@ -35,16 +35,10 @@ function definite(): Item {
   const pl = Math.random() < 0.25;
   const word = pl ? plural(n) : n.fr;
   const answer = pl ? "les" : elides(n.fr) ? "l’" : n.g === "m" ? "le" : "la";
-  const t = pick([
-    ["Je regarde ", ".", `I’m looking at the ${pl ? enPlural(n.en) : en1(n.en)}.`],
-    ["Où est ", " ?", `Where is the ${en1(n.en)}?`],
-    ["J’aime bien ", ".", `I really like the ${pl ? enPlural(n.en) : en1(n.en)}.`],
-  ]);
-  const before = pl && t[0] === "Où est " ? "Où sont " : t[0];
   return {
-    before,
-    after: (answer === "l’" ? "" : " ") + word + t[1],
-    en: pl && t[0] === "Où est " ? `Where are the ${enPlural(n.en)}?` : t[2],
+    before: "",
+    after: (answer === "l’" ? "" : " ") + word,
+    en: `the ${pl ? enPlural(n.en) : en1(n.en)}`,
     options: ["le", "la", "l’", "les"],
     answer,
     explain: pl ? "Plural nouns always take les." : answer === "l’" ? `${n.fr} starts with a vowel sound, so the article becomes l’ (${n.fr} is ${gname(n.g)}).` : `${n.fr} is ${gname(n.g)}, so it takes ${answer}.`,
@@ -56,11 +50,10 @@ function indefinite(): Item {
   const pl = Math.random() < 0.3;
   const answer = pl ? "des" : n.g === "m" ? "un" : "une";
   const word = pl ? plural(n) : n.fr;
-  const t = pick([["Il y a ", " ici.", (pl ? "There are" : "There is") + " ... here."], ["J’ai ", ".", "I have ...."], ["Elle cherche ", ".", "She’s looking for ...."]]);
   return {
-    before: t[0],
-    after: " " + word + t[1],
-    en: `${t[2].replace("...", pl ? `some ${enPlural(n.en)}` : `${/^[aeiou]/.test(en1(n.en)) ? "an" : "a"} ${en1(n.en)}`)}`,
+    before: "",
+    after: " " + word,
+    en: pl ? `some ${enPlural(n.en)}` : `${/^[aeiou]/.test(en1(n.en)) ? "an" : "a"} ${en1(n.en)}`,
     options: ["un", "une", "des"],
     answer,
     explain: pl ? "In the plural, un and une become des." : `${n.fr} is ${gname(n.g)}, so it takes ${answer}.`,
@@ -81,11 +74,10 @@ function contracted(): Item {
   const el = !p.pl && elides(p.fr);
   const g = n?.g ?? "m";
   const answer = withDe ? (p.pl ? "des" : el ? "de l’" : g === "m" ? "du" : "de la") : p.pl ? "aux" : el ? "à l’" : g === "m" ? "au" : "à la";
-  const t = withDe ? pick([["Je reviens ", "."], ["Elle sort ", "."], ["Nous partons ", " à midi."]]) : pick([["Je vais ", "."], ["On se retrouve ", " ?"], ["Ils travaillent ", "."]]);
-  const en = n ? (withDe ? `… from the ${en1(n.en)}` : `… to/at the ${en1(n.en)}`) : undefined;
+  const en = withDe ? `de + … · from the ${n ? en1(n.en) : p.fr}` : `à + … · to the ${n ? en1(n.en) : p.fr}`;
   return {
-    before: t[0],
-    after: (answer.endsWith("’") ? "" : " ") + p.fr + t[1],
+    before: "",
+    after: (answer.endsWith("’") ? "" : " ") + p.fr,
     en,
     options: withDe ? ["du", "de la", "de l’", "des"] : ["au", "à la", "à l’", "aux"],
     answer,
@@ -111,11 +103,10 @@ function partitive(): Item {
   const n = NOUN_MAP.get(f.fr.replace(/s$/, "")) ?? NOUN_MAP.get(f.fr);
   const el = !f.pl && elides(f.fr);
   const answer = f.pl ? "des" : el ? "de l’" : n?.g === "f" ? "de la" : "du";
-  const t = pick([["Je voudrais ", ".", "I’d like some"], ["Tu veux ", " ?", "Do you want some"], ["Nous achetons ", ".", "We’re buying some"]]);
   return {
-    before: t[0],
-    after: (el ? "" : " ") + f.fr + t[1],
-    en: n ? `${t[2]} ${f.fr === "pâtes" ? "pasta" : f.fr === "épinards" ? "spinach" : f.pl ? enPlural(n.en) : en1(n.en)}${t[1].includes("?") ? "?" : "."}` : undefined,
+    before: "",
+    after: (el ? "" : " ") + f.fr,
+    en: n ? `some ${f.fr === "pâtes" ? "pasta" : f.fr === "épinards" ? "spinach" : f.pl ? enPlural(n.en) : en1(n.en)}` : undefined,
     options: ["du", "de la", "de l’", "des"],
     answer,
     explain: f.pl ? "Plural: des." : el ? `${f.fr} starts with a vowel: de l’.` : `${f.fr} is ${gname(n?.g ?? "m")}: ${answer}.`,

@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { Header, Icon, Seg, Spinner } from "../components/ui";
-import { searchBooks, openBook, splitChapters, gallicaSearchUrl, gallicaTextUrl, type BookHit, type Chapter, type Source } from "../lib/books";
+import { searchBooks, openBook, openLink, splitChapters, gallicaSearchUrl, type BookHit, type Chapter, type Source } from "../lib/books";
 
 type Mode = "menu" | "paste" | "link" | "photo" | "books" | "chapters";
 type Lib = Source | "gallica";
@@ -22,7 +22,6 @@ export default function AddText() {
   const [q, setQ] = useState("");
   const [hits, setHits] = useState<BookHit[] | null>(null);
   const [book, setBook] = useState<{ title: string; author?: string; source: Source; chapters: Chapter[] } | null>(null);
-  const [gallicaLink, setGallicaLink] = useState("");
   const searchRef = useRef<() => void>();
   const nav = useNavigate();
 
@@ -106,51 +105,59 @@ export default function AddText() {
     setErr("");
     const raw = link.trim();
     try {
-      const u = new URL(raw);
-      if (/gallica\.bnf\.fr$/.test(u.hostname)) {
-        const t = gallicaTextUrl(raw);
-        if (!t) throw new Error("This doesn’t look like a Gallica document link.");
-        window.open(t, "_blank", "noopener");
-        setSource("Gallica (BnF)");
-        setMode("paste");
-        return;
+      new URL(raw);
+    } catch {
+      return setErr("Paste a full web address that starts with https://");
+    }
+    setBusy(true);
+    try {
+      const host = new URL(raw).hostname;
+      const src: Source = /gutenberg/.test(host) ? "gutenberg" : "wikisource";
+      const r = await openLink(raw);
+      if (/wikisource|gutenberg/.test(host)) showOpened(src, r.kind === "text" ? r.title || "" : r.title, undefined, r);
+      else if (r.kind === "text") {
+        if (r.text.length > 12000) {
+          setBook({ title: r.title || host, source: "wikisource", chapters: splitChapters(r.text) });
+          setSource(host.replace(/^www\./, ""));
+          setMode("chapters");
+        } else {
+          setTitle(r.title || "");
+          setText(r.text);
+          setSource(host.replace(/^www\./, ""));
+          setMode("paste");
+        }
       }
-      setBusy(true);
-      if (/wikisource\.org$/.test(u.hostname)) {
-        const m = u.pathname.match(/\/wiki\/(.+)$/);
-        if (!m) throw new Error("This doesn’t look like a Wikisource page link.");
-        const page = decodeURIComponent(m[1]).replace(/_/g, " ");
-        showOpened("wikisource", page, undefined, await openBook("wikisource", page));
-      } else if (/gutenberg\.org$/.test(u.hostname)) {
-        const id = raw.match(/\/(?:ebooks|files|epub)\/(\d+)/)?.[1];
-        if (!id) throw new Error("This doesn’t look like a Project Gutenberg book link.");
-        showOpened("gutenberg", `Gutenberg book ${id}`, undefined, await openBook("gutenberg", id));
-      } else throw new Error("Links from fr.wikisource.org, gutenberg.org and gallica.bnf.fr work. For other sites, copy the text and use Paste text.");
     } catch (e: any) {
       setErr(e.message || "Couldn’t load that link.");
     }
     setBusy(false);
   };
 
-  const runOcr = async (file: File) => {
+  const runOcr = async (files: File[]) => {
     setErr("");
     setBusy(true);
     setProgress(0);
     try {
-      // Runs entirely in the browser: the image never leaves the device.
+      // Runs entirely in the browser: images never leave the device.
       const { createWorker } = await import("tesseract.js");
+      let page = 0;
       const worker = await createWorker("fra", 1, {
-        logger: (m: any) => m.status === "recognizing text" && setProgress(Math.round(m.progress * 100)),
+        logger: (m: any) => m.status === "recognizing text" && setProgress(Math.round(((page + m.progress) / files.length) * 100)),
       });
-      const { data } = await worker.recognize(file);
+      const parts: string[] = [];
+      for (const f of files) {
+        const { data } = await worker.recognize(f);
+        parts.push(data.text.replace(/-\n/g, "").replace(/([^\n])\n(?!\n)/g, "$1 ").replace(/[ \t]+/g, " ").trim());
+        page++;
+      }
       await worker.terminate();
-      const clean = data.text.replace(/-\n/g, "").replace(/([^\n])\n(?!\n)/g, "$1 ").replace(/[ \t]+/g, " ").trim();
-      if (clean.length < 20) throw new Error("No text found. Try a sharper photo with good light.");
-      setText(clean);
-      setSource("Photo");
+      const clean = parts.filter(Boolean).join("\n\n");
+      if (clean.length < 20) throw new Error("No text found. Try sharper screenshots or a photo with good light.");
+      setText((t) => (t.trim() ? t.trim() + "\n\n" : "") + clean);
+      if (!source) setSource(files.length > 1 ? `${files.length} screenshots` : "Photo");
       setMode("paste");
     } catch (e: any) {
-      setErr(e.message || "Couldn’t read the photo.");
+      setErr(e.message || "Couldn’t read the image.");
     }
     setBusy(false);
   };
@@ -187,13 +194,13 @@ export default function AddText() {
   return (
     <div className="screen">
       <Header title="New text" onBack={mode === "menu" ? undefined : () => setMode(mode === "chapters" ? (hits ? "books" : "menu") : mode === "paste" && book ? "chapters" : "menu")} />
-      <input ref={fileRef} type="file" accept="image/*" capture="environment" hidden onChange={(e) => e.target.files?.[0] && runOcr(e.target.files[0])} />
+      <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => { const fs = Array.from(e.target.files ?? []); e.target.value = ""; if (fs.length) runOcr(fs.slice(0, 20)); }} />
 
       {mode === "menu" && (
         <>
-          <Option icon="camera" title="Photo or screenshot" sub="Recognized right on your phone" onClick={() => fileRef.current?.click()} />
+          <Option icon="camera" title="Photos or screenshots" sub="Pick one or several pages · read on your phone" onClick={() => fileRef.current?.click()} />
           <Option icon="book" title="Free books" sub="Wikisource, Project Gutenberg, Gallica" onClick={() => { setMode("books"); if (!hits) search(""); }} />
-          <Option icon="link" title="Link" sub="Wikisource, Gutenberg or Gallica" onClick={() => setMode("link")} />
+          <Option icon="link" title="Link" sub="An open article or book page" onClick={() => setMode("link")} />
           <Option icon="clip" title="Paste text" sub="From clipboard" onClick={() => setMode("paste")} />
           <div className="card tint" style={{ gap: 6 }}>
             <h3 style={{ fontSize: 14 }}>Open texts only</h3>
@@ -204,14 +211,14 @@ export default function AddText() {
 
       {mode === "link" && (
         <>
-          <label className="field"><span>Book link</span><input className="input" inputMode="url" placeholder="https://fr.wikisource.org/wiki/…" value={link} onChange={(e) => setLink(e.target.value)} /></label>
-          <p className="xs muted">Works with fr.wikisource.org, gutenberg.org and gallica.bnf.fr. A Gallica link opens its text view: copy the text and paste it here.</p>
+          <label className="field"><span>Book link</span><input className="input" inputMode="url" placeholder="https://…" value={link} onChange={(e) => setLink(e.target.value)} /></label>
+          <p className="xs muted">Works with most open article and book pages, including fr.wikisource.org and gutenberg.org. Gallica doesn’t allow apps, so take screenshots of its pages instead.</p>
           <button className="btn primary" onClick={loadLink} disabled={busy || !link.trim()}>{busy ? "Loading…" : "Load text"}</button>
         </>
       )}
 
-      {busy && mode === "menu" && (
-        <div className="card row"><Spinner /><span className="small">Recognizing text… {progress}%</span></div>
+      {busy && progress > 0 && (
+        <div className="card row"><Spinner /><span className="small">Reading the pages… {progress}%</span></div>
       )}
 
       {mode === "books" && (
@@ -228,10 +235,14 @@ export default function AddText() {
 
           {lib === "gallica" ? (
             <div className="card tint" style={{ gap: 8 }}>
-              <h3 style={{ fontSize: 14 }}>How to bring a book from Gallica</h3>
-              <p className="small" style={{ color: "#5B4034" }}>Gallica, the French National Library, doesn’t let apps load its books directly. Search above to open Gallica, pick a book marked “texte disponible”, then copy its link and paste it below. We’ll open its text view so you can copy a chapter and paste it into the app.</p>
-              <input className="input" inputMode="url" placeholder="https://gallica.bnf.fr/ark:/12148/…" value={gallicaLink} onChange={(e) => setGallicaLink(e.target.value)} />
-              <button className="btn sm" onClick={() => { const t = gallicaTextUrl(gallicaLink); if (!t) return setErr("Paste a Gallica document link (it contains ark:/12148/…)."); window.open(t, "_blank", "noopener"); setMode("paste"); setSource("Gallica (BnF)"); }}>Open text view</button>
+              <h3 style={{ fontSize: 14 }}>Gallica works through screenshots</h3>
+              <p className="small" style={{ color: "#5B4034" }}>Gallica, the French National Library, blocks apps from loading its books. Here’s the way that works:</p>
+              <ol className="small" style={{ color: "#5B4034", margin: 0, paddingLeft: 18 }}>
+                <li>Search above to open Gallica and pick a book.</li>
+                <li>Take screenshots of the pages you want to read.</li>
+                <li>Come back and tap the button below to add them. The text is read on your phone.</li>
+              </ol>
+              <button className="btn sm" onClick={() => { setSource("Gallica (BnF)"); fileRef.current?.click(); }}><Icon name="camera" size={18} /> Add screenshots</button>
               <p className="xs" style={{ color: "#5B4034" }}>Gallica texts are free for personal, non-commercial use. Credit: gallica.bnf.fr / BnF.</p>
             </div>
           ) : busy ? (
@@ -276,7 +287,8 @@ export default function AddText() {
       {mode === "paste" && (
         <>
           <label className="field"><span>Title</span><input className="input" placeholder="Le Petit Chaperon rouge" value={title} onChange={(e) => setTitle(e.target.value)} /></label>
-          <label className="field"><span>French text</span><textarea className="input" placeholder="Il était une fois…" value={text} onChange={(e) => setText(e.target.value)} /></label>
+          <label className="field"><span>French text</span><textarea className="input" style={{ minHeight: "55vh" }} placeholder="Il était une fois…" value={text} onChange={(e) => setText(e.target.value)} /></label>
+          <button className="btn ghost sm" style={{ alignSelf: "flex-start" }} onClick={() => fileRef.current?.click()}><Icon name="camera" size={18} /> Add more screenshots</button>
           <p className="xs muted">{words} words{source ? ` · from ${source}` : ""}</p>
           <button className="btn primary" onClick={save} disabled={busy}>{busy ? "Saving…" : "Start reading"}</button>
         </>

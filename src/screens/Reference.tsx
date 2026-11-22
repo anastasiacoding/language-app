@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { guessGender } from "../data/nouns";
 import { translateFrEn } from "../lib/translate";
 import { useFavorites } from "../lib/favorites";
-import { speak } from "../lib/speech";
 import { Icon, Seg } from "../components/ui";
 
 type Mode = "gender" | "conj" | "translate";
@@ -77,7 +76,6 @@ export default function Reference() {
             </div>
             <div className="row">
               <span className="small muted grow">{en || "…"}</span>
-              <button className="icon-btn" onClick={() => speak(article + word)} aria-label="Listen"><Icon name="speaker" size={18} color="#B9592D" /></button>
             </div>
             <div className="card tint" style={{ padding: 12, gap: 4 }}>
               <b className="small" style={{ color: "#5B4034" }}>Why {result.g === "m" ? "masculine" : "feminine"}?</b>

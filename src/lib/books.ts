@@ -32,6 +32,7 @@ async function call<T>(body: Record<string, string>): Promise<T> {
 
 export const searchBooks = (source: Source, q: string) => call<{ results: BookHit[] }>({ action: "search", source, q }).then((r) => r.results);
 export const openBook = (source: Source, id: string) => call<Opened>({ action: "open", source, id });
+export const openLink = (url: string) => call<Opened>({ action: "url", id: url });
 
 const MAX_CHUNK = 45000;
 

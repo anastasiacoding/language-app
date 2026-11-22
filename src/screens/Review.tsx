@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase, type WordRow } from "../lib/supabase";
-import { speechSupported, startRecognition, speak, type Recorder } from "../lib/speech";
+import { speechSupported, startRecognition, type Recorder } from "../lib/speech";
 import { similar, tokenize } from "../lib/score";
 import { Header, Icon, Spinner, Wave } from "../components/ui";
 
@@ -19,7 +19,9 @@ export default function Review() {
 
   useEffect(() => {
     supabase.from("words").select("*").eq("learned", false).order("correct_streak").limit(15).then(({ data }) => setQueue((data ?? []).sort(() => Math.random() - 0.5)));
-    return () => rec.current?.stop();
+    return () => {
+      rec.current?.stop();
+    };
   }, []);
 
   if (!queue) return <div className="screen" style={{ alignItems: "center", paddingTop: 80 }}><Spinner /></div>;
@@ -39,11 +41,13 @@ export default function Review() {
     await supabase.from("words").update({ reviews: w.reviews + 1, correct_streak: streak, learned: streak >= 3 }).eq("id", w.id);
   };
 
-  const mic = () => {
+  const mic = async () => {
     if (listening) {
-      rec.current?.stop();
       setListening(false);
-      check(heard);
+      const said = (await rec.current?.stop()) ?? heard;
+      rec.current = null;
+      setHeard(said);
+      check(said);
       return;
     }
     setHeard("");
@@ -77,7 +81,6 @@ export default function Review() {
       <div className="card center" style={{ padding: "36px 20px", alignItems: "center", gap: 12 }}>
         <p style={{ fontSize: 30, fontWeight: 700 }}>{w.word}</p>
         {(mode === "read" || result !== null) && <p className="muted">{w.translation}</p>}
-        <button className="icon-btn" onClick={() => speak(w.word)} aria-label="Listen"><Icon name="speaker" size={22} color="#B9592D" /></button>
       </div>
       {heard && <p className="small muted center" style={{ fontStyle: "italic" }}>“{heard}”</p>}
       {result !== null ? (

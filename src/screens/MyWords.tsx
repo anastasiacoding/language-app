@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase, type WordRow } from "../lib/supabase";
-import { speak } from "../lib/speech";
 import { Header, Icon, Seg, Spinner } from "../components/ui";
 
 type Filter = "all" | "pronunciation" | "meaning";
@@ -55,7 +54,6 @@ export default function MyWords() {
           <div className="card flat">
             {list.map((w) => (
               <div className="list-row" key={w.id} style={{ cursor: "default" }}>
-                <button className="icon-btn" onClick={() => speak(w.word)} aria-label={`Hear ${w.word}`}><Icon name="speaker" size={20} color="#B9592D" /></button>
                 <div className="grow">
                   <div className="t" style={{ textDecoration: w.learned ? "line-through" : "none", color: w.learned ? "var(--muted)" : undefined }}>{w.word}</div>
                   <div className="s">{w.translation}</div>

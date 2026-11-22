@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { translateLong, translateFrEn } from "../lib/translate";
-import { speechSupported, startRecognition, speak, type Recorder } from "../lib/speech";
+import { speechSupported, startRecognition, type Recorder } from "../lib/speech";
 import { saveWords } from "../lib/supabase";
 import { guessGender } from "../data/nouns";
 import { tokenize, FR_STOP } from "../lib/score";
@@ -69,7 +69,6 @@ export default function Translate() {
         <div className="card tint">
           <div className="row between">
             <span className="label" style={{ color: "#5B4034" }}>English</span>
-            <button className="icon-btn" onClick={() => speak(src)} aria-label="Hear the French"><Icon name="speaker" size={18} color="#B9592D" /></button>
           </div>
           <p style={{ fontSize: 18, fontWeight: 500, color: "#5B4034" }}>{out}</p>
         </div>

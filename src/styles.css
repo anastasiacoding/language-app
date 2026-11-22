@@ -1,6 +1,8 @@
 :root {
   --scarlet: #a4161a;
   --scarlet-soft: #f6e3e1;
+  --green: #4e7d3a;
+  --green-soft: #e6efdc;
   --brass: #c39a4e;
   --copper: #b9592d;
   --silver: #c5c8cc;
@@ -121,8 +123,10 @@ textarea.input { height: auto; min-height: 160px; padding: 12px 16px; resize: ve
 
 .opts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .opt { height: 54px; border-radius: 14px; border: 1px solid var(--line); background: var(--card); font-size: 17px; font-weight: 600; cursor: pointer; }
-.opt.right { background: var(--scarlet-soft); border: 1.5px solid var(--scarlet); color: var(--scarlet); }
-.opt.wrong { background: var(--tint); color: var(--muted); text-decoration: line-through; }
+.opt.right { background: var(--green-soft); border: 1.5px solid var(--green); color: var(--green); }
+.opt.wrong { background: var(--scarlet-soft); border: 1.5px solid var(--scarlet); color: var(--scarlet); text-decoration: line-through; }
+.feedback.ok { background: var(--green-soft); color: var(--green); }
+.feedback.bad { background: var(--scarlet-soft); color: var(--scarlet); }
 
 .table { width: 100%; border-collapse: collapse; }
 .table td { padding: 6px 0; font-size: 15px; }

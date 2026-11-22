@@ -1,5 +1,6 @@
 // Edge function: search and fetch public-domain French books from
-// Project Gutenberg and French Wikisource. (Gallica blocks server requests, so the app links to it instead.)
+// Project Gutenberg and French Wikisource, and extract text from open web pages.
+// (Gallica blocks server requests, so the app asks for screenshots instead.)
 // Runs server-side so the app avoids cross-site limits and the user's IP isn't sent to these sites.
 // Requires a signed-in user (verify_jwt), so it can't be used as an open proxy.
 import { DOMParser } from "npm:linkedom@0.18.5";
@@ -107,6 +108,17 @@ async function gutenbergOpen(id: string) {
   return { kind: "text", text: clean(body).slice(0, MAX) };
 }
 
+// ---------- Language check ----------
+const FR = new Set("le la les un une des de du et à au aux en dans sur pour avec par que qui ne pas il elle ils elles nous vous je est sont était son sa ses ce cette mais ou se plus comme tout".split(" "));
+const EN = new Set("the and of to in that is was he she it with for as his her on by at from this which be not are".split(" "));
+function looksFrench(text: string) {
+  const words = text.toLowerCase().replace(/[^a-zàâäçéèêëîïôöùûüœ' ]+/g, " ").split(/[\s']+/).filter(Boolean);
+  if (words.length < 6) return true;
+  const fr = words.filter((w) => FR.has(w)).length;
+  const en = words.filter((w) => EN.has(w)).length;
+  return fr / words.length >= 0.12 && fr > en;
+}
+
 // ---------- Wikisource ----------
 const WS = "https://fr.wikisource.org/w/api.php";
 
@@ -119,6 +131,8 @@ async function wikisourceSearch(q: string) {
   const seen = new Set<string>();
   const out: any[] = [];
   for (const r of data.query?.search ?? []) {
+    const snippet = String(r.snippet ?? "").replace(/<[^>]+>/g, " ");
+    if (!looksFrench(snippet)) continue;
     const top = r.title.split("/")[0];
     if (seen.has(top)) continue;
     seen.add(top);
@@ -159,6 +173,52 @@ async function wikisourceOpen(title: string) {
   return { kind: "text", title: realTitle.replace(/\//g, " · "), text: text.slice(0, MAX) };
 }
 
+// ---------- Any open web page (article or book chapter) ----------
+function safeUrl(raw: string): URL {
+  const u = new URL(raw);
+  if (u.protocol !== "https:" && u.protocol !== "http:") throw new Error("Only web links work.");
+  const h = u.hostname.toLowerCase();
+  if (h === "localhost" || h.endsWith(".local") || h.endsWith(".internal") || h.endsWith(".supabase.co") || /^(\d+\.){3}\d+$/.test(h) || h.includes(":") || !h.includes(".")) throw new Error("This link can’t be opened.");
+  if (/(^|\.)gallica\.bnf\.fr$/.test(h)) throw new Error("Gallica blocks apps from loading its books. Take screenshots of the pages instead and add them with Photo or screenshot.");
+  return u;
+}
+
+async function fromUrl(raw: string) {
+  const u = safeUrl(raw);
+  if (/(^|\.)wikisource\.org$/.test(u.hostname)) {
+    const m = u.pathname.match(/\/wiki\/(.+)$/);
+    if (m) return wikisourceOpen(decodeURIComponent(m[1]).replace(/_/g, " "));
+  }
+  if (/(^|\.)gutenberg\.org$/.test(u.hostname)) {
+    const id = u.pathname.match(/\/(?:ebooks|files|epub)\/(\d+)/)?.[1];
+    if (id) return { ...(await gutenbergOpen(id)), title: "" };
+  }
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 15000);
+  let html = "";
+  try {
+    const r = await fetch(u.toString(), { headers: { ...UA, Accept: "text/html,text/plain" }, signal: ctrl.signal, redirect: "follow" });
+    if (!r.ok) throw new Error(r.status === 403 ? "This site blocks apps. Copy the text and use Paste text." : `The site answered ${r.status}.`);
+    const type = r.headers.get("content-type") ?? "";
+    if (!/text\/(html|plain)|xhtml/.test(type)) throw new Error("This link isn’t a web page with text.");
+    html = (await r.text()).slice(0, 3_000_000);
+    if (type.includes("text/plain")) return { kind: "text", title: "", text: clean(html.replace(/([^\n])\n(?!\n)/g, "$1 ")).slice(0, MAX) };
+  } finally {
+    clearTimeout(t);
+  }
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  const title = (doc.querySelector('meta[property="og:title"]')?.getAttribute("content") || doc.querySelector("title")?.textContent || "").trim();
+  doc.querySelectorAll("script, style, noscript, nav, header, footer, aside, form, figure, iframe, button, .comments, #comments, .share, .newsletter, .advert, .ad").forEach((n: any) => n.remove());
+  const root = doc.querySelector("article") ?? doc.querySelector("main") ?? doc.querySelector("body");
+  const paras = Array.from(root?.querySelectorAll("p, blockquote") ?? [])
+    .map((p: any) => (p.textContent ?? "").replace(/\s+/g, " ").trim())
+    .filter((t: string) => t.length > 40);
+  const text = paras.join("\n\n");
+  if (text.length < 200) throw new Error("No article text found on that page. Copy the text and use Paste text.");
+  if (!looksFrench(text.slice(0, 2000))) throw new Error("This page doesn’t seem to be in French.");
+  return { kind: "text", title: title.slice(0, 200), text: text.slice(0, MAX) };
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   try {
@@ -173,6 +233,7 @@ Deno.serve(async (req: Request) => {
       if (source === "gutenberg") return json(await gutenbergOpen(key));
       if (source === "wikisource") return json(await wikisourceOpen(key));
     }
+    if (action === "url") return json(await fromUrl(String(id).slice(0, 2000)));
     return json({ error: "Unknown request" }, 400);
   } catch (e) {
     return json({ error: e instanceof Error ? e.message : "Something went wrong" }, 502);

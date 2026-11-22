@@ -106,15 +106,23 @@ export function scoreTranslation(reference: string, user: string): { score: numb
   return { score: Math.round(Math.min(1, f1 * 1.05) * 100), missed };
 }
 
-/** Approximate coverage of the passage's key words in a French retelling. */
+/**
+ * Approximate retelling score. Rewards using the passage's key words (strict matching),
+ * penalizes content that has nothing to do with the passage, and needs a real attempt (8+ content words).
+ */
 export function scoreRetelling(passage: string, retell: string): { score: number; used: string[]; keywords: string[] } {
-  const key = Array.from(new Set(tokenize(passage).filter((w) => !FR_STOP.has(w) && w.length > 2)));
-  const said = tokenize(retell).filter((w) => !FR_STOP.has(w));
+  const key = Array.from(new Set(tokenize(passage).filter((w) => !FR_STOP.has(w) && w.length > 3)));
+  const said = tokenize(retell).filter((w) => !FR_STOP.has(w) && w.length > 2);
   if (!key.length) return { score: 0, used: [], keywords: [] };
-  const used = key.filter((k) => said.some((s) => similar(k, s, 0.75)));
-  const target = Math.max(5, Math.round(key.length * 0.6));
-  const lengthOk = said.length >= 5 ? 1 : said.length / 5;
-  return { score: Math.round(Math.min(1, used.length / target) * lengthOk * 100), used, keywords: key };
+  const match = (a: string, b: string) => a === b || stripAccents(a) === stripAccents(b) || (a.length > 5 && b.length > 5 && similar(a, b, 0.86));
+  const used = key.filter((k) => said.some((s) => match(k, s)));
+  const relevant = said.filter((s) => key.some((k) => match(k, s))).length;
+  const target = Math.max(4, Math.round(key.length * 0.35));
+  const recall = Math.min(1, used.length / target);
+  const precision = said.length ? relevant / said.length : 0; // share of what you said that relates to the passage
+  const length = Math.min(1, said.length / 8);
+  const score = recall * (0.35 + 0.65 * Math.min(1, precision * 2.2)) * length;
+  return { score: Math.round(score * 100), used, keywords: key };
 }
 
 export function splitSentences(text: string): string[] {
@@ -126,7 +134,7 @@ export function splitSentences(text: string): string[] {
     .filter(Boolean);
 }
 
-/** Groups sentences into short passages (about 40 words or 3 sentences). */
+/** Groups sentences into passages of about 80 words or 6 sentences. */
 export function splitPassages(text: string): string[] {
   const out: string[] = [];
   let cur: string[] = [];
@@ -134,7 +142,7 @@ export function splitPassages(text: string): string[] {
   for (const s of splitSentences(text)) {
     cur.push(s);
     words += s.split(/\s+/).length;
-    if (words >= 40 || cur.length >= 3) {
+    if (words >= 80 || cur.length >= 6) {
       out.push(cur.join(" "));
       cur = [];
       words = 0;
