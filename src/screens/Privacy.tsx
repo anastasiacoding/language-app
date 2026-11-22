@@ -36,6 +36,7 @@ export default function Privacy() {
       <ul>
         <li><b>Voice:</b> your device’s speech recognition turns speech into text: Apple on iPhone and Safari, Google in Chrome and on Android, which may send audio to Google’s servers. We receive only the text.</li>
         <li><b>Photos:</b> text recognition runs on your device. The image never leaves your phone. The recognition model files are downloaded from the jsDelivr network the first time.</li>
+        <li><b>Free books:</b> when you search Wikisource or Project Gutenberg, our server fetches the book for you, so these sites don’t see your IP address. Gallica opens in your own browser.</li>
         <li><b>Translation:</b> to translate and score your translations we send the French text (never your name or email) to MyMemory, operated by Translated srl in Italy.</li>
       </ul>
 
