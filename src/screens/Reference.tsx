@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { guessGender } from "../data/nouns";
+import { guessGender, loadAllNouns, elides, H_ASPIRE } from "../data/nouns";
 import { translateFrEn } from "../lib/translate";
 import { useFavorites } from "../lib/favorites";
 import { Icon, Seg } from "../components/ui";
@@ -25,14 +25,19 @@ export default function Reference() {
   const { favs } = useFavorites("verb");
   const nav = useNavigate();
 
+  const [dictReady, setDictReady] = useState(false);
+  useEffect(() => {
+    loadAllNouns().then(() => setDictReady(true));
+  }, []);
   const result = word ? guessGender(word) : null;
 
   useEffect(() => {
     if (!word || !result) return;
+    if (result.both) return setEn("");
     if (result.en) return setEn(result.en);
     setEn("");
     translateFrEn(word).then(setEn).catch(() => {});
-  }, [word]);
+  }, [word, dictReady]);
 
   const submit = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -44,7 +49,8 @@ export default function Reference() {
     setWord(clean);
     const g = guessGender(clean);
     if (g) {
-      const next = [`${g.g === "m" ? (/^[aeiouyhéèêâîôû]/.test(clean) ? "l’" : "le ") : /^[aeiouyhéèêâîôû]/.test(clean) ? "l’" : "la "}${clean}|${clean}`, ...recent.filter((r) => !r.endsWith("|" + clean))].slice(0, 8);
+      const a = g.both ? "le/la " : elides(clean) && !H_ASPIRE.has(clean) ? "l’" : g.g === "m" ? "le " : "la ";
+      const next = [`${a}${clean}|${clean}`, ...recent.filter((r) => !r.endsWith("|" + clean))].slice(0, 8);
       setRecent(next);
       try {
         localStorage.setItem(RECENT_KEY, JSON.stringify(next));
@@ -55,20 +61,28 @@ export default function Reference() {
   };
 
   const placeholder = mode === "gender" ? "A noun, e.g. problème" : mode === "conj" ? "A verb, e.g. faire" : "A French word or phrase";
-  const article = result ? (/^[aeiouyhéèêâîôû]/.test(word) ? "l’" : result.g === "m" ? "le " : "la ") : "";
+  const art = (g: "m" | "f") => (elides(word) && !H_ASPIRE.has(word) ? "l’" : g === "m" ? "le " : "la ");
+  const article = result ? art(result.g) : "";
 
   return (
     <div className="screen">
-      <h1>Reference</h1>
+      <h1>Check</h1>
       <form className="card row" style={{ padding: "12px 14px", gap: 10, flexDirection: "row" }} onSubmit={submit}>
         <Icon name="search" size={20} color="#6B5850" />
-        <input className="grow" style={{ border: 0, outline: 0, background: "none", fontSize: 14 }} placeholder={placeholder} value={q} onChange={(e) => setQ(e.target.value)} enterKeyHint="search" autoCapitalize="off" />
+        <input className="grow" style={{ border: 0, outline: 0, background: "none", fontSize: 16 }} placeholder={placeholder} value={q} onChange={(e) => setQ(e.target.value)} enterKeyHint="search" autoCapitalize="off" />
         <button className="chip" type="submit">Go</button>
       </form>
       <Seg items={[{ id: "gender", label: "Gender" }, { id: "conj", label: "Conjugation" }, { id: "translate", label: "Translate" }]} value={mode} onChange={(m) => { setMode(m); setWord(""); }} />
 
       {mode === "gender" && word && (
-        result ? (
+        result?.both ? (
+          <div className="card" style={{ padding: 20 }}>
+            <span className="chip red" style={{ alignSelf: "flex-start" }}>two genders</span>
+            <div className="stack" style={{ gap: 2 }}><h2>{art("m")}{word}</h2><span className="small muted">masculine · {result.both.m}</span></div>
+            <div className="stack" style={{ gap: 2 }}><h2>{art("f")}{word}</h2><span className="small muted">feminine · {result.both.f}</span></div>
+            <p className="small muted">The gender changes the meaning, so learn both with their article.</p>
+          </div>
+        ) : result ? (
           <div className="card" style={{ padding: 20 }}>
             <div className="row between">
               <h1 style={{ fontSize: 24 }}>{article}{word}</h1>

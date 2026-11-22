@@ -1,0 +1,8 @@
+# Word data
+
+`practice.json` and `nouns-all.json` are derived from:
+
+- **Wiktionary** (English edition), French entries, as extracted by [kaikki.org](https://kaikki.org) — licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) and GFDL. Used for genders, plurals and English glosses.
+- **Lexique 3.83** by Boris New and Christophe Pallier ([lexique.org](http://www.lexique.org)) — licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). Used for word frequencies.
+
+These derived files are shared under the same licence, CC BY-SA 4.0.

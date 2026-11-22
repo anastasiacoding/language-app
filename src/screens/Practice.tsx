@@ -1,7 +1,7 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { RULE_MAP } from "../data/rules";
-import { nextItem, type Item } from "../lib/practice";
+import { nextItem, loadWords, type Item } from "../lib/practice";
 import { speechSupported, startRecognition, type Recorder } from "../lib/speech";
 import { similar, normalize } from "../lib/score";
 import { Header, Icon } from "../components/ui";
@@ -15,6 +15,11 @@ export default function Practice() {
   const [listening, setListening] = useState(false);
   const [heard, setHeard] = useState("");
   const rec = useRef<Recorder | null>(null);
+
+  useEffect(() => {
+    // switch to the large word list as soon as it's loaded
+    loadWords().then(() => setItem((cur) => (chosen ? cur : nextItem(id!))));
+  }, [id]);
 
   const choose = (o: string) => {
     if (chosen) return;

@@ -6,6 +6,8 @@ const P: Record<string, string> = {
   chev: '<path d="M9 6l6 6-6 6"/>',
   mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 17v4"/><path d="M8 21h8"/>',
   book: '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/>',
+  page: '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 11h6"/><path d="M9 14h6"/><path d="M9 17h4"/>',
+  checkCircle: '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.5"/>',
   grammar: '<path d="M3 9l9-5 9 5-9 5z"/><path d="M7 11v5c3 2 7 2 10 0v-5"/>',
   lang: '<path d="M4 5h8"/><path d="M8 3v2"/><path d="M5 9c1 4 4 6 7 7"/><path d="M11 5c-1 5-4 8-7 10"/><path d="M13 20l4-9 4 9"/><path d="M14.5 17h5"/>',
   chart: '<path d="M4 19h16"/><path d="M4 15l5-5 4 3 6-7"/>',
@@ -71,9 +73,9 @@ export function Toggle({ on, onChange, label }: { on: boolean; onChange: (v: boo
 
 export function TabBar() {
   const tabs = [
-    { to: "/", label: "Texts", icon: "book", end: true },
+    { to: "/", label: "Texts", icon: "page", end: true },
     { to: "/grammar", label: "Grammar", icon: "grammar" },
-    { to: "/reference", label: "Reference", icon: "lang" },
+    { to: "/reference", label: "Check", icon: "checkCircle" },
     { to: "/progress", label: "Progress", icon: "chart" },
   ];
   return (

@@ -60,6 +60,13 @@ export default function Privacy() {
         <li>Complain to the CNIL (cnil.fr) or your local data protection authority.</li>
       </ul>
 
+      <h2>Credits</h2>
+      <ul>
+        <li>Word genders, plurals and English meanings: Wiktionary, via kaikki.org (CC BY-SA 4.0).</li>
+        <li>Word frequencies: Lexique 3.83 by Boris New and Christophe Pallier, lexique.org (CC BY-SA 4.0).</li>
+        <li>Font: Montserrat (SIL Open Font License).</li>
+      </ul>
+
       <h2>Age and storage</h2>
       <p>The app is for people aged 15 and over. It stores a sign-in token and a few settings in your browser so you stay signed in. These are strictly necessary. We use no tracking or advertising cookies.</p>
     </div>

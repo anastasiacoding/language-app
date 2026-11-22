@@ -53,11 +53,15 @@ export const NOUNS: Noun[] = RAW.filter(([fr]) => (seen.has(fr) ? false : (seen.
 
 export const NOUN_MAP = new Map(NOUNS.map((n) => [n.fr, n]));
 
-const H_MUET = ["homme", "hôpital", "hôtel", "heure", "histoire", "herbe", "huile", "hiver"];
+const H_MUET = new Set(["habit", "habitant", "habitation", "habitude", "harmonie", "herbe", "heure", "heureux", "hippopotame", "histoire", "hiver", "hommage", "homme", "honneur", "horaire", "horizon", "horloge", "horreur", "hospitalité", "hostilité", "huile", "humanité", "humeur", "humidité", "humour", "huître", "hygiène", "hypothèse", "hélicoptère", "hémisphère", "héritage", "héritier", "héroïne", "hésitation", "hôpital", "hôtel", "hôtesse"]);
+export const H_ASPIRE = new Set(["héros", "haricot", "hibou", "honte", "hache", "haine", "hall", "hamac", "hameau", "hanche", "handicap", "hangar", "hareng", "hasard", "hauteur", "haut", "hockey", "homard", "housse", "hublot", "hurlement", "hutte", "halte", "harpe", "hérisson", "hêtre", "hiérarchie", "huit", "hâte", "hausse", "hernie", "houle", "hotte", "haie", "hamburger", "harcèlement", "hargne", "héron", "hoquet", "horde", "hamster", "handball", "hippie"]);
+export function addHMuet(list: string[]) {
+  for (const w of list) H_MUET.add(w);
+}
 
 /** True when the article elides before this word (l', d', de l'). */
 export function elides(word: string) {
-  return /^[aeiouyàâäéèêëîïôöùûüœæ]/i.test(word) || H_MUET.includes(word.toLowerCase());
+  return /^[aeiouyàâäéèêëîïôöùûüœæ]/i.test(word) || H_MUET.has(word.toLowerCase());
 }
 
 export function plural(n: Noun) {
@@ -96,9 +100,21 @@ export const ENDINGS: { end: string; g: G; why: string; except: string[] }[] = [
   { end: "e", g: "f", why: "Many nouns ending in -e are feminine, but there are lots of exceptions.", except: [] },
 ];
 
-export function guessGender(word: string): { g: G; why: string; sure: boolean; en?: string } | null {
+let BIG: Map<string, { g: G | "mf"; en: string; en2?: string }> | null = null;
+
+/** Loads about 17,700 nouns with gender and English meaning (Wiktionary via kaikki.org, Lexique). */
+export async function loadAllNouns() {
+  if (BIG) return;
+  const m: any = await import("./nouns-all.json");
+  const rows: any[] = m.default ?? m;
+  BIG = new Map(rows.map((r) => [r[0], r[1] === "mf" ? { g: "mf", en: r[2], en2: r[3] } : { g: r[1], en: r[2] }]));
+}
+
+export function guessGender(word: string): { g: G; why: string; sure: boolean; en?: string; both?: { m: string; f: string } } | null {
   const w = word.trim().toLowerCase().replace(/^(le|la|l'|l’|un|une)\s*/, "");
-  const known = NOUN_MAP.get(w);
+  const big = BIG?.get(w);
+  if (big?.g === "mf") return { g: "m", why: "This word has two genders, each with its own meaning.", sure: true, en: big.en, both: { m: big.en, f: big.en2 ?? "" } };
+  const known = NOUN_MAP.get(w) ?? (big ? { fr: w, g: big.g as G, en: big.en } : undefined);
   if (known) {
     const rule = ENDINGS.find((e) => w.endsWith(e.end));
     let why = "";

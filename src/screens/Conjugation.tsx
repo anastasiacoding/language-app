@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { conjugate, TENSES, type Tense } from "../lib/conjugate";
 import { useFavorites } from "../lib/favorites";
@@ -9,6 +9,14 @@ export default function Conjugation() {
   const c = useMemo(() => conjugate(decodeURIComponent(verb || "")), [verb]);
   const [sel, setSel] = useState<Tense[]>(["present", "passe"]);
   const { favs, toggle } = useFavorites("verb");
+  const [en, setEn] = useState("");
+  useEffect(() => {
+    if (c.en) return setEn(c.en);
+    import("../data/practice.json").then((m: any) => {
+      const hit = (m.default ?? m).verbs.find((v: string[]) => v[0] === c.infinitive.replace(/^(se |s’)/, ""));
+      setEn(hit ? hit[1] : "");
+    });
+  }, [c.infinitive]);
 
   if (!c.supported)
     return (
@@ -24,7 +32,7 @@ export default function Conjugation() {
     <div className="screen">
       <Header title={c.infinitive} right={<button className="icon-btn" onClick={() => toggle(c.infinitive)} aria-label="Favorite"><Star on={favs.has(c.infinitive)} size={24} /></button>} />
       <div className="row wrap" style={{ gap: 8 }}>
-        {c.en && <span className="small muted">{c.en}</span>}
+        {en && <span className="small muted">{en}</span>}
         {c.irregular && <span className="chip red">irregular</span>}
         <span className="chip">auxiliary: {c.aux}</span>
       </div>

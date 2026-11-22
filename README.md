@@ -12,6 +12,7 @@ Live: https://anastasiacoding.github.io/language-app/
 - Tesseract.js for on-device text recognition from photos
 - MyMemory for free FR → EN machine translation
 - Montserrat, self-hosted via `@fontsource` (SIL Open Font License)
+- Word data from Wiktionary (via kaikki.org) and Lexique 3.83, both CC BY-SA 4.0 — see `src/data/DATA-LICENSE.md`
 
 ## Develop
 

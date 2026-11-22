@@ -226,7 +226,7 @@ export default function AddText() {
           <Seg items={[{ id: "wikisource", label: "Wikisource" }, { id: "gutenberg", label: "Gutenberg" }, { id: "gallica", label: "Gallica" }]} value={lib} onChange={(v: Lib) => { setLib(v); setHits(null); setErr(""); if (v !== "gallica") setTimeout(() => searchRef.current?.(), 0); }} />
           <form className="card row" style={{ padding: "10px 14px", gap: 10, flexDirection: "row" }} onSubmit={(e) => { e.preventDefault(); lib === "gallica" ? window.open(gallicaSearchUrl(q || "roman"), "_blank", "noopener") : search(); }}>
             <Icon name="search" size={20} color="#6B5850" />
-            <input className="grow" style={{ border: 0, outline: 0, background: "none", fontSize: 14 }} placeholder="Title or author" value={q} onChange={(e) => setQ(e.target.value)} enterKeyHint="search" />
+            <input className="grow" style={{ border: 0, outline: 0, background: "none", fontSize: 16 }} placeholder="Title or author" value={q} onChange={(e) => setQ(e.target.value)} enterKeyHint="search" />
             <button className="chip" type="submit">{lib === "gallica" ? "Open Gallica" : "Search"}</button>
           </form>
           <div className="hscroll">
