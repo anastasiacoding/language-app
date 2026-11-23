@@ -4,6 +4,7 @@ import { supabase, type TextRow, type SessionRow } from "../lib/supabase";
 import { useAuth } from "../lib/auth";
 import { Icon, Modal, Progress, Spinner } from "../components/ui";
 import { splitPassages } from "../lib/score";
+import { FEEDBACK_URL } from "./About";
 import { minutesToday } from "../lib/stats";
 import { loadActivity, streakFrom, type ActivityRow } from "../lib/activity";
 
@@ -104,7 +105,11 @@ export default function Library() {
           })}
         </>
       )}
-      <Link to="/about" className="small center" style={{ display: "block", marginTop: "auto", padding: "18px 0 4px", color: "var(--muted)" }}>About the app</Link>
+      <p className="small center" style={{ marginTop: "auto", padding: "18px 0 4px", color: "var(--muted)" }}>
+        <Link to="/about" style={{ color: "var(--muted)" }}>About the app</Link>
+        <span aria-hidden="true"> · </span>
+        <a href={FEEDBACK_URL} style={{ color: "var(--muted)" }}>Send feedback</a>
+      </p>
       {toDelete && (
         <Modal onClose={() => setToDelete(null)}>
           <h2>Delete this text?</h2>

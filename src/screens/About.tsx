@@ -3,6 +3,7 @@ import { Header } from "../components/ui";
 import { Lion } from "../components/Lion";
 
 export const APP_NAME = "French Lion";
+export const FEEDBACK_URL = "mailto:AnastasiaPotrashkova@gmail.com?subject=" + encodeURIComponent("French Lion feedback");
 
 export default function About() {
   return (
@@ -30,6 +31,9 @@ export default function About() {
 
       <h2>Free and private</h2>
       <p>{APP_NAME} is a personal, non-commercial project: free, with no ads. It uses free and openly licensed resources (Wiktionary, Lexique, Wikisource) and keeps only what it needs to save your progress. <Link to="/privacy">Privacy policy</Link></p>
+
+      <h2>Tell me what you think</h2>
+      <p>Something not working, a word that’s wrong, an idea for a new exercise? <a href={FEEDBACK_URL}>Send feedback</a> and I’ll read every message.</p>
     </div>
   );
 }
