@@ -1,8 +1,8 @@
 import { Header } from "../components/ui";
 
 // Keep in sync with the Privacy Policy document. Fill in the controller details before publishing.
-const CONTROLLER = "[Your full name]";
-const CONTACT = "[privacy contact email]";
+const CONTROLLER = "Anastasia Potrashkova";
+const CONTACT = "AnastasiaPotrashkova@gmail.com";
 
 export default function Privacy() {
   return (
