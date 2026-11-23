@@ -8,7 +8,7 @@ export function Lion({ mood, size = 160 }: { mood: Mood; size?: number }) {
   const sad = mood === "sad" || mood === "droopy";
   const droopy = mood === "droopy";
   return (
-    <svg className={"lion lion-" + mood} width={size} height={size} viewBox="120 110 272 312" role="img" aria-label={`Your lion looks ${mood === "happy" ? "happy" : mood === "neutral" ? "a bit bored" : mood === "sad" ? "sad" : "very sad"}`}>
+    <svg className={"lion lion-" + mood} width={size} height={size} viewBox="60 108 392 392" style={{ overflow: "visible", flexShrink: 0 }} role="img" aria-label={`Your lion looks ${mood === "happy" ? "happy" : mood === "neutral" ? "a bit bored" : mood === "sad" ? "sad" : "very sad"}`}>
       <g className="lion-body">
         <g className="lion-mane">
           <path d={MANE_OUTER} fill={droopy ? "#8E7550" : "#B07A2A"} stroke={droopy ? "#8E7550" : "#B07A2A"} strokeWidth="10" strokeLinejoin="round" />

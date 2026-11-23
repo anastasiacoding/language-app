@@ -93,15 +93,19 @@ export default function Progress() {
     <div className="screen">
       <h1>Progress</h1>
 
-      <div className="card" style={{ alignItems: "center", paddingTop: 20, gap: 8 }}>
-        <Lion mood={mood} size={150} />
-        <div className="row" style={{ gap: 6 }}>
-          <Icon name="flame" size={20} color="#B9592D" />
-          <b style={{ fontSize: 22 }}>{streak}</b>
-          <span className="muted">day streak</span>
+      <div className="row" style={{ gap: 14, alignItems: "center", margin: "4px 0 6px" }}>
+        <Lion mood={mood} size={92} />
+        <div className="stack" style={{ gap: 4, minWidth: 0 }}>
+          <div className="row" style={{ gap: 6 }}>
+            <Icon name="flame" size={18} color="#B9592D" />
+            <b style={{ fontSize: 20 }}>{streak}</b>
+            <span className="muted">day streak</span>
+          </div>
+          <p className="small" style={{ margin: 0 }}>{MOOD_TEXT[mood](streak)}</p>
         </div>
-        <p className="small center" style={{ maxWidth: 300 }}>{MOOD_TEXT[mood](streak)}</p>
-        <div className="row" style={{ gap: 8, marginTop: 4 }}>
+      </div>
+      <div className="stack" style={{ alignItems: "center", gap: 8 }}>
+        <div className="row" style={{ gap: 8 }}>
           {week.map((d) => (
             <div key={d.day} className="stack" style={{ alignItems: "center", gap: 4 }}>
               <span style={{ width: 26, height: 26, borderRadius: 13, display: "grid", placeItems: "center", background: d.kinds.size ? "var(--scarlet)" : "var(--tint)", color: d.kinds.size ? "#FFF3E6" : "var(--muted)" }}>
