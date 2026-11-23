@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useAuth } from "./lib/auth";
 import { Spinner, TabBar } from "./components/ui";
+import About from "./screens/About";
 import { SignUp, LogIn, ResetPassword, SetNewPassword } from "./screens/Auth";
 import Library from "./screens/Library";
 import AddText from "./screens/AddText";
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="/login" element={<LogIn />} />
           <Route path="/reset" element={<ResetPassword />} />
           <Route path="/privacy" element={<Privacy />} />
+          <Route path="/about" element={<About />} />
           <Route path="*" element={<SignUp />} />
         </Routes>
       </div>
@@ -65,6 +67,7 @@ export default function App() {
         <Route path="/review/:mode" element={<Review />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/privacy" element={<Privacy />} />
+        <Route path="/about" element={<About />} />
         <Route path="/consents" element={<ConsentHistory />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

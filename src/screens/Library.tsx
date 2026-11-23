@@ -58,6 +58,7 @@ export default function Library() {
         </Link>
       </div>
 
+      <p className="small muted" style={{ margin: "-4px 0 0" }}>Add your text to practice French reading, translation and retelling.</p>
       <Link to="/add" className="btn"><Icon name="plus" size={20} /> Add text</Link>
 
       {texts === null ? (
@@ -103,6 +104,7 @@ export default function Library() {
           })}
         </>
       )}
+      <Link to="/about" className="small center" style={{ display: "block", marginTop: "auto", padding: "18px 0 4px", color: "var(--muted)" }}>About the app</Link>
       {toDelete && (
         <Modal onClose={() => setToDelete(null)}>
           <h2>Delete this text?</h2>

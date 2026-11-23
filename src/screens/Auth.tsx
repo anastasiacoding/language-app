@@ -55,7 +55,7 @@ export function SignUp() {
     <form className="screen" onSubmit={submit}>
       <Brand />
       <h1>Bienvenue !</h1>
-      <p className="muted small">Learn French with real texts: read, translate and retell out loud.</p>
+      <p className="muted small">French Lion: practice reading, grammar and conjugation. Make yourself proud.</p>
       <label className="field"><span>Name</span><input className="input" value={name} onChange={(e) => setName(e.target.value)} autoComplete="given-name" /></label>
       <label className="field"><span>Email</span><input className="input" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" /></label>
       <label className="field"><span>Password</span><input className="input" type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" /></label>
@@ -68,6 +68,7 @@ export function SignUp() {
       {err && <p className="err">{err}</p>}
       <button className="btn primary" disabled={busy}>{busy ? "Creating…" : "Create account"}</button>
       <p className="center small muted">Already have an account? <Link to="/login" style={{ fontWeight: 600 }}>Log in</Link></p>
+      <p className="center xs"><Link to="/about" style={{ color: "var(--muted)" }}>About the app</Link></p>
       <p className="center small muted"><Link to="/reset">Forgot your password?</Link></p>
     </form>
   );

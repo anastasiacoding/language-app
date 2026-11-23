@@ -11,8 +11,8 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["icon.svg", "app-icon.svg", "favicon-32.png"],
       manifest: {
-        name: "Language App — French",
-        short_name: "French",
+        name: "French Lion",
+        short_name: "French Lion",
         description: "Learn French by reading, translating and retelling real texts out loud.",
         theme_color: "#A4161A",
         background_color: "#F8F5F2",
