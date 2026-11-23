@@ -11,6 +11,7 @@ export default function Rule() {
   return (
     <div className="screen">
       <Header title={r.title} right={<button className="icon-btn" onClick={() => toggle(r.id)} aria-label="Favorite"><Star on={favs.has(r.id)} size={24} /></button>} />
+      <div className="row" style={{ gap: 6 }}><span className="chip">{r.level}</span><span className="xs muted">{r.category}</span></div>
       <div className="card">{r.explain.map((p, i) => <p key={i} style={{ fontSize: 15 }}>{p}</p>)}</div>
       {r.table && (
         <div className="card flat">

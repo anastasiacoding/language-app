@@ -61,7 +61,7 @@ export function addHMuet(list: string[]) {
 
 /** True when the article elides before this word (l', d', de l'). */
 export function elides(word: string) {
-  return /^[aeiouyàâäéèêëîïôöùûüœæ]/i.test(word) || H_MUET.has(word.toLowerCase());
+  return /^[aeiouàâäéèêëîïôöùûüœæ]/i.test(word) || H_MUET.has(word.toLowerCase());
 }
 
 export function plural(n: Noun) {

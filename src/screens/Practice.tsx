@@ -63,6 +63,7 @@ export default function Practice() {
 
   if (!rule) return <div className="screen"><Header title="Practice" /></div>;
   const ok = chosen === item.answer;
+  const long = item.options.some((o) => o.length > (item.options.length === 6 ? 7 : 16));
   return (
     <div className="screen">
       <Header title="Practice" />
@@ -71,16 +72,23 @@ export default function Practice() {
         <span className="xs muted">example {count} · no score, practice as long as you like</span>
       </div>
       <div className="card" style={{ padding: 22 }}>
-        <p style={{ fontSize: item.before || item.after.length > 20 ? 22 : 30, fontWeight: 600, lineHeight: 1.4, textAlign: item.before || item.after.length > 20 ? "left" : "center" }}>
-          {item.before}
-          <span style={{ color: chosen ? (ok ? "var(--green)" : "var(--scarlet)") : "var(--scarlet)", borderBottom: chosen ? "none" : "2px solid var(--scarlet)", padding: "0 4px" }}>{chosen ? item.answer : "\u00A0\u00A0\u00A0\u00A0"}</span>
-          {item.after}
-        </p>
+        {item.prompt ? (
+          <>
+            <p style={{ fontSize: 20, fontWeight: 600, lineHeight: 1.4 }}>{item.prompt}</p>
+            {chosen && <p style={{ fontSize: 18, fontWeight: 600, color: ok ? "var(--green)" : "var(--scarlet)" }}>{item.answer}</p>}
+          </>
+        ) : (
+          <p style={{ fontSize: item.before || item.after.length > 20 ? 22 : 30, fontWeight: 600, lineHeight: 1.4, textAlign: item.before || item.after.length > 20 ? "left" : "center" }}>
+            {item.before}
+            <span style={{ color: chosen ? (ok ? "var(--green)" : "var(--scarlet)") : "var(--scarlet)", borderBottom: chosen ? "none" : "2px solid var(--scarlet)", padding: "0 4px" }}>{chosen ? item.answer : "\u00A0\u00A0\u00A0\u00A0"}</span>
+            {item.after}
+          </p>
+        )}
         {item.en && <p className="small muted">{item.en}</p>}
       </div>
-      <div className="opts" style={item.options.length === 3 ? { gridTemplateColumns: "1fr 1fr 1fr" } : undefined}>
+      <div className="opts" style={long ? { gridTemplateColumns: "1fr" } : item.options.length === 3 || item.options.length === 6 ? { gridTemplateColumns: "1fr 1fr 1fr" } : undefined}>
         {item.options.map((o) => (
-          <button key={o} className={"opt" + (chosen ? (o === item.answer ? " right" : o === chosen ? " wrong" : "") : "")} onClick={() => choose(o)}>{o}</button>
+          <button key={o} className={"opt" + (long ? " long" : "") + (chosen ? (o === item.answer ? " right" : o === chosen ? " wrong" : "") : "")} onClick={() => choose(o)}>{o}</button>
         ))}
       </div>
       {chosen && (
