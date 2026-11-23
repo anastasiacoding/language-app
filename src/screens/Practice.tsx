@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { RULE_MAP } from "../data/rules";
 import { nextItem, loadWords, type Item } from "../lib/practice";
+import { recordActivity, GRAMMAR_MIN } from "../lib/activity";
 import { speechSupported, startRecognition, type Recorder } from "../lib/speech";
 import { similar, normalize } from "../lib/score";
 import { Header, Icon } from "../components/ui";
@@ -21,9 +22,12 @@ export default function Practice() {
     loadWords().then(() => setItem((cur) => (chosen ? cur : nextItem(id!))));
   }, [id]);
 
+  const answered = useRef(0);
   const choose = (o: string) => {
     if (chosen) return;
     setChosen(o);
+    answered.current++;
+    if (answered.current === GRAMMAR_MIN) recordActivity("grammar");
   };
 
   const next = () => {

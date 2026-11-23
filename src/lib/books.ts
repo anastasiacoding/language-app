@@ -33,6 +33,8 @@ async function call<T>(body: Record<string, string>): Promise<T> {
 export const searchBooks = (source: Source, q: string) => call<{ results: BookHit[] }>({ action: "search", source, q }).then((r) => r.results);
 export const openBook = (source: Source, id: string) => call<Opened>({ action: "open", source, id });
 export const openLink = (url: string) => call<Opened>({ action: "url", id: url });
+export const checkGrammar = (text: string) => call<{ issues: { message: string; text: string; fix: string[] }[] }>({ action: "grammar", q: text }).then((r) => r.issues);
+export const sourceStatus = () => call<{ gutenberg: boolean }>({ action: "status" });
 
 const MAX_CHUNK = 45000;
 

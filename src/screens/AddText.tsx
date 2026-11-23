@@ -1,8 +1,8 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { Header, Icon, Seg, Spinner } from "../components/ui";
-import { searchBooks, openBook, openLink, splitChapters, gallicaSearchUrl, type BookHit, type Chapter, type Source } from "../lib/books";
+import { searchBooks, openBook, openLink, splitChapters, sourceStatus, type BookHit, type Chapter, type Source } from "../lib/books";
 
 type Mode = "menu" | "paste" | "link" | "photo" | "books" | "chapters";
 type Lib = Source | "gallica";
@@ -23,6 +23,12 @@ export default function AddText() {
   const [hits, setHits] = useState<BookHit[] | null>(null);
   const [book, setBook] = useState<{ title: string; author?: string; source: Source; chapters: Chapter[] } | null>(null);
   const searchRef = useRef<() => void>();
+  const [gutenbergOk, setGutenbergOk] = useState<boolean | null>(null);
+  // Checks every time the screen opens: Gutenberg turns on by itself once it's back online.
+  useEffect(() => {
+    sourceStatus().then((r) => setGutenbergOk(r.gutenberg)).catch(() => setGutenbergOk(false));
+  }, []);
+  const soon = lib === "gallica" || (lib === "gutenberg" && gutenbergOk === false);
   const nav = useNavigate();
 
   const words = text.trim() ? text.trim().split(/\s+/).length : 0;
@@ -199,7 +205,7 @@ export default function AddText() {
       {mode === "menu" && (
         <>
           <Option icon="camera" title="Photos or screenshots" sub="Pick one or several pages · read on your phone" onClick={() => fileRef.current?.click()} />
-          <Option icon="book" title="Free books" sub="Wikisource, Project Gutenberg, Gallica" onClick={() => { setMode("books"); if (!hits) search(""); }} />
+          <Option icon="book" title="Free books" sub="Wikisource now · Gutenberg and Gallica soon" onClick={() => { setMode("books"); if (!hits) search(""); }} />
           <Option icon="link" title="Link" sub="An open article or book page" onClick={() => setMode("link")} />
           <Option icon="clip" title="Paste text" sub="From clipboard" onClick={() => setMode("paste")} />
           <div className="card tint" style={{ gap: 6 }}>
@@ -223,27 +229,26 @@ export default function AddText() {
 
       {mode === "books" && (
         <>
-          <Seg items={[{ id: "wikisource", label: "Wikisource" }, { id: "gutenberg", label: "Gutenberg" }, { id: "gallica", label: "Gallica" }]} value={lib} onChange={(v: Lib) => { setLib(v); setHits(null); setErr(""); if (v !== "gallica") setTimeout(() => searchRef.current?.(), 0); }} />
-          <form className="card row" style={{ padding: "10px 14px", gap: 10, flexDirection: "row" }} onSubmit={(e) => { e.preventDefault(); lib === "gallica" ? window.open(gallicaSearchUrl(q || "roman"), "_blank", "noopener") : search(); }}>
+          <Seg items={[{ id: "wikisource", label: "Wikisource" }, { id: "gutenberg", label: gutenbergOk === false ? "Gutenberg · soon" : "Gutenberg" }, { id: "gallica", label: "Gallica · soon" }]} value={lib} onChange={(v: Lib) => { setLib(v); setHits(null); setErr(""); if (v === "wikisource" || (v === "gutenberg" && gutenbergOk !== false)) setTimeout(() => searchRef.current?.(), 0); }} />
+          {!soon && <form className="card row" style={{ padding: "10px 14px", gap: 10, flexDirection: "row" }} onSubmit={(e) => { e.preventDefault(); search(); }}>
             <Icon name="search" size={20} color="#6B5850" />
             <input className="grow" style={{ border: 0, outline: 0, background: "none", fontSize: 16 }} placeholder="Title or author" value={q} onChange={(e) => setQ(e.target.value)} enterKeyHint="search" />
-            <button className="chip" type="submit">{lib === "gallica" ? "Open Gallica" : "Search"}</button>
-          </form>
-          <div className="hscroll">
-            {SUGGEST.map((s) => <button key={s} className="pill" onClick={() => { setQ(s); lib === "gallica" ? window.open(gallicaSearchUrl(s), "_blank", "noopener") : search(s); }}>{s}</button>)}
-          </div>
+            <button className="chip" type="submit">Search</button>
+          </form>}
+          {!soon && <div className="hscroll">
+            {SUGGEST.map((s) => <button key={s} className="pill" onClick={() => { setQ(s); search(s); }}>{s}</button>)}
+          </div>}
 
-          {lib === "gallica" ? (
-            <div className="card tint" style={{ gap: 8 }}>
-              <h3 style={{ fontSize: 14 }}>Gallica works through screenshots</h3>
-              <p className="small" style={{ color: "#5B4034" }}>Gallica, the French National Library, blocks apps from loading its books. Here’s the way that works:</p>
-              <ol className="small" style={{ color: "#5B4034", margin: 0, paddingLeft: 18 }}>
-                <li>Search above to open Gallica and pick a book.</li>
-                <li>Take screenshots of the pages you want to read.</li>
-                <li>Come back and tap the button below to add them. The text is read on your phone.</li>
-              </ol>
-              <button className="btn sm" onClick={() => { setSource("Gallica (BnF)"); fileRef.current?.click(); }}><Icon name="camera" size={18} /> Add screenshots</button>
-              <p className="xs" style={{ color: "#5B4034" }}>Gallica texts are free for personal, non-commercial use. Credit: gallica.bnf.fr / BnF.</p>
+          {soon ? (
+            <div className="card tint" style={{ gap: 8, alignItems: "flex-start" }}>
+              <span className="chip">Coming soon</span>
+              <h3 style={{ fontSize: 15 }}>{lib === "gallica" ? "Gallica isn’t connected yet" : "Project Gutenberg is offline right now"}</h3>
+              <p className="small" style={{ color: "#5B4034" }}>
+                {lib === "gallica"
+                  ? "The French National Library doesn’t let apps load its books yet. Until then, you can take screenshots of Gallica pages and add them with Photos or screenshots."
+                  : "Gutenberg’s website is down for maintenance. The app checks every time you open this screen and switches it on by itself once it’s back."}
+              </p>
+              {lib === "gallica" && <button className="btn sm" onClick={() => { setSource("Gallica (BnF)"); fileRef.current?.click(); }}><Icon name="camera" size={18} /> Add screenshots</button>}
             </div>
           ) : busy ? (
             <div className="row" style={{ justifyContent: "center", padding: 20 }}><Spinner /></div>
@@ -259,7 +264,7 @@ export default function AddText() {
               ))}
             </div>
           ) : null}
-          {lib === "gutenberg" && <p className="xs muted">Only books whose authors died before 1956, so they’re in the public domain in France.</p>}
+          {lib === "gutenberg" && !soon && <p className="xs muted">Only books whose authors died before 1956, so they’re in the public domain in France.</p>}
         </>
       )}
 

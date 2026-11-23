@@ -1,5 +1,6 @@
 // Edge function: search and fetch public-domain French books from
-// Project Gutenberg and French Wikisource, and extract text from open web pages.
+// Project Gutenberg and French Wikisource, extract text from open web pages,
+// and check French grammar with LanguageTool.
 // (Gallica blocks server requests, so the app asks for screenshots instead.)
 // Runs server-side so the app avoids cross-site limits and the user's IP isn't sent to these sites.
 // Requires a signed-in user (verify_jwt), so it can't be used as an open proxy.
@@ -219,11 +220,52 @@ async function fromUrl(raw: string) {
   return { kind: "text", title: title.slice(0, 200), text: text.slice(0, MAX) };
 }
 
+// ---------- Grammar check (LanguageTool, Germany) ----------
+// Speech-to-text has no punctuation or capitals, so only real grammar issues are kept.
+const IGNORE = new Set(["PUNCTUATION", "TYPOGRAPHY", "CASING", "STYLE", "WHITESPACE", "REDUNDANCY", "TYPOS", "MISC"]);
+async function grammar(text: string) {
+  const body = new URLSearchParams({ text: text.slice(0, 5000), language: "fr" });
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 15000);
+  try {
+    const r = await fetch("https://api.languagetool.org/v2/check", { method: "POST", body, headers: { ...UA, "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" }, signal: ctrl.signal });
+    if (!r.ok) throw new Error("Grammar check is busy. Try again in a minute.");
+    const data = await r.json();
+    const issues = (data.matches ?? [])
+      .filter((m: any) => !IGNORE.has(m.rule?.category?.id))
+      .filter((m: any) => !/majuscule|ponctuation|espace|virgule|point/i.test(m.message ?? ""))
+      .slice(0, 12)
+      .map((m: any) => ({
+        message: m.shortMessage || m.message,
+        text: text.substr(m.offset, m.length),
+        offset: m.offset,
+        length: m.length,
+        fix: (m.replacements ?? []).slice(0, 2).map((x: any) => x.value),
+        category: m.rule?.category?.id ?? "",
+      }));
+    return { issues };
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+async function status() {
+  const ok = async (u: string) => {
+    try {
+      const txt = await get(u, 6000);
+      return txt.length > 200 && !/Temporarily Down for Maintenance/i.test(txt);
+    } catch {
+      return false;
+    }
+  };
+  return { gutenberg: (await ok("https://www.gutenberg.org/ebooks/search.opds/?query=hugo%20l.fr")) || (await ok("https://gutendex.com/books/?ids=17489")) };
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   try {
     const { action, source, q = "", id = "" } = await req.json();
-    const query = String(q).slice(0, 120);
+    const query = String(q).slice(0, action === "grammar" ? 5000 : 120);
     const key = String(id).slice(0, 300);
     if (action === "search") {
       if (source === "gutenberg") return json({ results: await gutenbergSearch(query) });
@@ -234,6 +276,8 @@ Deno.serve(async (req: Request) => {
       if (source === "wikisource") return json(await wikisourceOpen(key));
     }
     if (action === "url") return json(await fromUrl(String(id).slice(0, 2000)));
+    if (action === "grammar") return json(await grammar(String(q || id)));
+    if (action === "status") return json(await status());
     return json({ error: "Unknown request" }, 400);
   } catch (e) {
     return json({ error: e instanceof Error ? e.message : "Something went wrong" }, 502);

@@ -1,7 +1,7 @@
 import { Header } from "../components/ui";
 
 // Keep in sync with the Privacy Policy document. Fill in the controller details before publishing.
-const CONTROLLER = "[Controller name]";
+const CONTROLLER = "[Your full name]";
 const CONTACT = "[privacy contact email]";
 
 export default function Privacy() {
@@ -12,13 +12,13 @@ export default function Privacy() {
       <p>We collect only what the app needs to help you learn French, we never sell your data, and we show no ads.</p>
 
       <h2>Who we are</h2>
-      <p>The data controller is {CONTROLLER}. Contact for privacy questions: {CONTACT}.</p>
+      <p>The app is run by {CONTROLLER}, a private individual living in France, not by a company. It’s a personal, non-commercial project: free, with no ads and no income. The GDPR still applies, and {CONTROLLER} is the data controller. Contact for privacy questions: {CONTACT}.</p>
 
       <h2>What we collect</h2>
       <ul>
         <li><b>Account:</b> name, email, password (stored only as a secure hash).</li>
         <li><b>Learning content:</b> texts you add, saved words, favorite rules and verbs, daily goal.</li>
-        <li><b>Learning results:</b> reading, translation and retelling scores, session dates and length.</li>
+        <li><b>Learning results:</b> reading, translation and retelling scores, session dates and length, and the days you practiced (for your streak).</li>
         <li><b>Consents:</b> what you agreed to or withdrew, and when.</li>
         <li><b>Technical:</b> IP address and browser data in our providers’ security logs.</li>
       </ul>
@@ -36,6 +36,7 @@ export default function Privacy() {
       <ul>
         <li><b>Voice:</b> your device’s speech recognition turns speech into text: Apple on iPhone and Safari, Google in Chrome and on Android, which may send audio to Google’s servers. We receive only the text.</li>
         <li><b>Photos:</b> text recognition runs on your device. The image never leaves your phone. The recognition model files are downloaded from the jsDelivr network the first time.</li>
+        <li><b>Grammar check:</b> to check your retelling we send the text you said (never your name or email) to LanguageTool, run by LanguageTooler GmbH in Germany.</li>
         <li><b>Free books:</b> when you search Wikisource or Project Gutenberg, our server fetches the book for you, so these sites don’t see your IP address. Gallica opens in your own browser.</li>
         <li><b>Translation:</b> to translate and score your translations we send the French text (never your name or email) to MyMemory, operated by Translated srl in Italy.</li>
       </ul>
@@ -45,6 +46,7 @@ export default function Privacy() {
         <li><b>Supabase</b>: database and sign-in, EU (Frankfurt, Germany).</li>
         <li><b>GitHub Pages</b>: hosts the app files, United States (EU–US Data Privacy Framework).</li>
         <li><b>MyMemory (Translated srl)</b>: machine translation, Italy.</li>
+        <li><b>LanguageTool (LanguageTooler GmbH)</b>: grammar check, Germany.</li>
         <li><b>Apple or Google</b>: speech recognition on your device.</li>
       </ul>
 

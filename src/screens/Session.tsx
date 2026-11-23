@@ -2,8 +2,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { supabase, latestConsents, setConsent, saveWords, type TextRow } from "../lib/supabase";
 import { speechSupported, startRecognition, type Recorder } from "../lib/speech";
-import { scoreReading, scoreRetelling, scoreTranslation, splitPassages, tokenize } from "../lib/score";
+import { scoreReading, scoreRetelling, scoreTranslation, splitPassages, tokenize, retellKeywords, type RetellResult } from "../lib/score";
+import { checkGrammar } from "../lib/books";
 import { translateFrEn, translateLong } from "../lib/translate";
+import { recordActivity } from "../lib/activity";
 import { Header, Icon, Spinner, Steps, Wave } from "../components/ui";
 
 type Step = "read" | "translate" | "retell" | "results";
@@ -40,7 +42,7 @@ export default function Session() {
   // results per step
   const [reading, setReading] = useState<{ score: number; bad: Set<number> } | null>(null);
   const [translation, setTranslation] = useState<{ score: number; reference: string; missed: string[]; said: string } | null>(null);
-  const [retell, setRetell] = useState<{ score: number; used: string[]; said: string } | null>(null);
+  const [retell, setRetell] = useState<(RetellResult & { said: string }) | null>(null);
   const [unknown, setUnknown] = useState<Set<number>>(new Set());
   const [busy, setBusy] = useState(false);
   const [practiceWords, setPracticeWords] = useState<{ word: string; translation: string; reason: "pronunciation" | "meaning" }[]>([]);
@@ -70,6 +72,7 @@ export default function Session() {
   const passage = passages[pIndex] ?? "";
   const chunks = useMemo(() => passage.split(/\s+/).filter(Boolean), [passage]);
   const chunkTokens = useMemo(() => chunks.map((c) => tokenize(c).length), [chunks]);
+  const suggested = useMemo(() => retellKeywords(passage), [passage]);
 
   const resetCapture = () => {
     setHeard("");
@@ -146,10 +149,12 @@ export default function Session() {
     setBusy(false);
   };
 
-  const finishRetell = (said: string) => {
+  const finishRetell = async (said: string) => {
     if (!said.trim()) return setErr("Say or type your retelling first.");
-    const r = scoreRetelling(passage, said);
-    setRetell({ score: r.score, used: r.used, said });
+    setBusy(true);
+    const issues = await checkGrammar(said).catch(() => null);
+    setBusy(false);
+    setRetell({ ...scoreRetelling(passage, said, suggested, issues), said });
   };
 
   const cleanWord = (w: string) => w.replace(/^[«"“(\[—–-]+|[»"”)\].,;:!?…]+$/g, "").replace(/^(l|d|j|m|t|s|n|qu|c)['’]/i, "");
@@ -175,6 +180,7 @@ export default function Session() {
       duration_sec: Math.min(7200, Math.round((Date.now() - startedAt.current) / 1000)),
     });
     await saveWords(withT.map((w) => ({ ...w, text_id: text!.id })));
+    if (reading && translation && retell) await recordActivity("text");
     await supabase.from("texts").update({ passage_index: text!.passage_index + 1 }).eq("id", text!.id);
     setBusy(false);
     setStep("results");
@@ -319,10 +325,13 @@ export default function Session() {
         <>
           <div className="card">
             <h2>Retell the passage</h2>
-            <p className="small muted">In your own words, in French. Meaning matters more than precision.</p>
-            <span className="label">You can use</span>
+            <p className="small muted">In your own words, in French. Use all the words below: they count toward your score, together with meaning and grammar.</p>
+            <span className="label">Use these words</span>
             <div className="row wrap" style={{ gap: 6 }}>
-              {scoreRetelling(passage, "").keywords.slice(0, 5).map((k) => <span key={k} className="chip">{k}</span>)}
+              {suggested.map((k) => {
+                const st = retell ? (retell.keywordsUsed.includes(k) ? "ok" : "bad") : "";
+                return <span key={k} className="chip" style={st ? { background: st === "ok" ? "var(--green-soft)" : "var(--scarlet-soft)", color: st === "ok" ? "var(--green)" : "var(--scarlet)" } : undefined}>{st === "ok" ? "✓ " : ""}{k}</span>;
+              })}
             </div>
           </div>
           {retell ? (
@@ -330,9 +339,24 @@ export default function Session() {
               <div className="card soft">
                 <div className="row between"><span className="label">Your retelling</span><span className="chip">{retell.score}%</span></div>
                 <p style={{ fontStyle: "italic" }}>{retell.said}</p>
-                {retell.used.length > 0 && <p className="xs muted">Key words you used: {retell.used.slice(0, 10).join(", ")}</p>}
               </div>
-              <p className="xs muted">The score checks how many key words of the passage you used, so it’s approximate.</p>
+              <div className="card" style={{ gap: 8 }}>
+                <div className="row between small"><span>Suggested words</span><b>{retell.keywordsUsed.length} of {suggested.length}</b></div>
+                <div className="row between small"><span>Meaning, close to the original</span><b>{retell.meaning}%</b></div>
+                <div className="row between small"><span>Grammar</span><b>{retell.grammar == null ? "couldn’t check" : retell.issues.length ? `${retell.issues.length} to fix` : "no issues found"}</b></div>
+                {retell.issues.length > 0 && (
+                  <div className="stack" style={{ gap: 6, borderTop: "1px solid var(--line)", paddingTop: 8 }}>
+                    {retell.issues.map((g, i) => (
+                      <div key={i} className="small">
+                        <span style={{ color: "var(--scarlet)", textDecoration: "line-through" }}>{g.text}</span>
+                        {g.fix[0] && <> → <b style={{ color: "var(--green)" }}>{g.fix[0]}</b></>}
+                        <div className="xs muted">{g.message}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <p className="xs muted">Grammar is checked by LanguageTool. Meaning is compared by shared words, so it’s approximate.</p>
               <div className="row" style={{ gap: 10 }}>
                 <button className="btn" onClick={() => { setRetell(null); resetCapture(); }}><Icon name="refresh" size={18} /> Again</button>
                 <button className="btn primary" disabled={busy} onClick={saveAll}>{busy ? "Saving…" : "See results"}</button>
@@ -341,8 +365,9 @@ export default function Session() {
           ) : (
             <>
               {live && <div className="card soft"><span className="label">You’re saying</span><p style={{ fontStyle: "italic" }}>{live}</p></div>}
+              {busy && <div className="row"><Spinner /><span className="small muted">Checking your retelling…</span></div>}
               {typeInstead(finishRetell, "Votre résumé en français")}
-              <button className="btn ghost" onClick={saveAll} disabled={busy}>Skip and see results</button>
+              <button className="btn ghost" onClick={saveAll} disabled={busy}>Skip (this text won’t count for your streak)</button>
             </>
           )}
           {err && <p className="err">{err}</p>}

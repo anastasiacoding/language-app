@@ -42,7 +42,7 @@ export default function Profile() {
   };
 
   const download = async () => {
-    const tables = ["profiles", "consents", "texts", "sessions", "words", "favorites"];
+    const tables = ["profiles", "consents", "texts", "sessions", "words", "favorites", "activity"];
     const out: Record<string, unknown> = { exported_at: new Date().toISOString(), account: { id: session!.user.id, email: session!.user.email, created_at: session!.user.created_at } };
     for (const t of tables) out[t] = (await supabase.from(t).select("*")).data;
     const blob = new Blob([JSON.stringify(out, null, 2)], { type: "application/json" });

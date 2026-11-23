@@ -99,13 +99,20 @@ const PLACES: { fr: string; pl?: boolean; g?: G; en?: string }[] = [
 ];
 
 function contracted(): Item {
-  const p = pick(PLACES);
-  const n = NOUN_MAP.get(p.fr);
+  // 40% everyday places, 60% any noun from the big list (à + le chat = au chat, de + l’homme…)
+  let p: { fr: string; pl?: boolean; g?: G; en?: string } = pick(PLACES);
+  let n: Noun | undefined = NOUN_MAP.get(p.fr);
+  if (COUNTABLE.length > 300 && Math.random() < 0.6) {
+    const r = pickNoun();
+    const pl = r.canPl && Math.random() < 0.25;
+    n = r.n;
+    p = { fr: pl ? plural(r.n) : r.n.fr, pl, en: pl ? enPlural(r.n.en) : en1(r.n.en) };
+  }
   const withDe = Math.random() < 0.45;
   const el = !p.pl && elides(p.fr);
   const g = n?.g ?? "m";
   const answer = withDe ? (p.pl ? "des" : el ? "de l’" : g === "m" ? "du" : "de la") : p.pl ? "aux" : el ? "à l’" : g === "m" ? "au" : "à la";
-  const place = n ? en1(n.en) : p.en ?? p.fr;
+  const place = p.en ?? (n ? en1(n.en) : p.fr);
   const en = withDe ? `de + … · from the ${place}` : `à + … · to the ${place}`;
   return {
     before: "",

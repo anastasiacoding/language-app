@@ -4,7 +4,8 @@ import { supabase, type TextRow, type SessionRow } from "../lib/supabase";
 import { useAuth } from "../lib/auth";
 import { Icon, Modal, Progress, Spinner } from "../components/ui";
 import { splitPassages } from "../lib/score";
-import { streakDays, minutesToday } from "../lib/stats";
+import { minutesToday } from "../lib/stats";
+import { loadActivity, streakFrom, type ActivityRow } from "../lib/activity";
 
 function greeting() {
   const h = new Date().getHours();
@@ -15,6 +16,7 @@ export default function Library() {
   const { name } = useAuth();
   const [texts, setTexts] = useState<TextRow[] | null>(null);
   const [sessions, setSessions] = useState<SessionRow[]>([]);
+  const [activity, setActivity] = useState<ActivityRow[]>([]);
   const nav = useNavigate();
   const [toDelete, setToDelete] = useState<TextRow | null>(null);
 
@@ -34,10 +36,11 @@ export default function Library() {
       ]);
       setTexts(t ?? []);
       setSessions(s ?? []);
+      setActivity(await loadActivity());
     })();
   }, []);
 
-  const streak = streakDays(sessions);
+  const { streak } = streakFrom(activity);
   const today = minutesToday(sessions);
 
   return (

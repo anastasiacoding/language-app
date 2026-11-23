@@ -106,23 +106,88 @@ export function scoreTranslation(reference: string, user: string): { score: numb
   return { score: Math.round(Math.min(1, f1 * 1.05) * 100), missed };
 }
 
+/** Light French stemmer: enough to match "partit" with "parti", "navires" with "navire". */
+export function stemFr(w: string): string {
+  let s = stripAccents(w.toLowerCase());
+  for (const suf of ["issements", "issement", "ations", "ation", "ements", "ement", "ments", "ment", "euses", "euse", "eurs", "eur", "ives", "ive", "aient", "ions", "iez", "ais", "ait", "ant", "ent", "ons", "ez", "er", "ir", "re", "ee", "es", "e", "s", "x", "t"]) {
+    if (s.endsWith(suf) && s.length - suf.length >= 3) {
+      s = s.slice(0, -suf.length);
+      break;
+    }
+  }
+  return s;
+}
+
+/** The words we suggest using in a retelling: nouns and names from the passage, in text order. */
+export function retellKeywords(passage: string, n = 5): string[] {
+  const text = normalize(passage);
+  const nouns: string[] = [];
+  const re = /(?:^|[\s(«"])(?:le|la|les|l'|un|une|des|du|au|aux|son|sa|ses|ce|cette|mon|ma|notre|leur)\s*([a-zàâäçéèêëîïôöùûüœ\-]{3,})/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text))) {
+    const w = m[1].replace(/-$/, "");
+    if (!FR_STOP.has(w) && !nouns.includes(w)) nouns.push(w);
+  }
+  if (nouns.length < n) {
+    for (const w of tokenize(passage)) if (!FR_STOP.has(w) && w.length > 4 && !nouns.includes(w)) nouns.push(w);
+  }
+  // spread the picks across the passage, favouring longer words
+  if (nouns.length <= n) return nouns.slice(0, n);
+  const step = nouns.length / n;
+  return Array.from({ length: n }, (_, i) => {
+    const slice = nouns.slice(Math.floor(i * step), Math.floor((i + 1) * step));
+    return slice.sort((a, b) => b.length - a.length)[0];
+  });
+}
+
+export interface GrammarIssue {
+  message: string;
+  text: string;
+  fix: string[];
+}
+
+export interface RetellResult {
+  score: number;
+  keywordsUsed: string[];
+  keywordsMissed: string[];
+  meaning: number; // 0..100
+  grammar: number | null; // 0..100, null if the check failed
+  issues: GrammarIssue[];
+}
+
 /**
- * Approximate retelling score. Rewards using the passage's key words (strict matching),
- * penalizes content that has nothing to do with the passage, and needs a real attempt (8+ content words).
+ * Retelling score out of 100:
+ * 35% suggested words used, 35% meaning (shared content with the passage, by word stems),
+ * 30% grammar (LanguageTool issues per 10 words). Unrelated talk is capped at 15%.
  */
-export function scoreRetelling(passage: string, retell: string): { score: number; used: string[]; keywords: string[] } {
-  const key = Array.from(new Set(tokenize(passage).filter((w) => !FR_STOP.has(w) && w.length > 3)));
-  const said = tokenize(retell).filter((w) => !FR_STOP.has(w) && w.length > 2);
-  if (!key.length) return { score: 0, used: [], keywords: [] };
-  const match = (a: string, b: string) => a === b || stripAccents(a) === stripAccents(b) || (a.length > 5 && b.length > 5 && similar(a, b, 0.86));
-  const used = key.filter((k) => said.some((s) => match(k, s)));
-  const relevant = said.filter((s) => key.some((k) => match(k, s))).length;
-  const target = Math.max(4, Math.round(key.length * 0.35));
-  const recall = Math.min(1, used.length / target);
-  const precision = said.length ? relevant / said.length : 0; // share of what you said that relates to the passage
-  const length = Math.min(1, said.length / 8);
-  const score = recall * (0.35 + 0.65 * Math.min(1, precision * 2.2)) * length;
-  return { score: Math.round(score * 100), used, keywords: key };
+export function scoreRetelling(passage: string, retell: string, suggested: string[], issues: GrammarIssue[] | null): RetellResult {
+  const saidAll = tokenize(retell);
+  const said = saidAll.filter((w) => !FR_STOP.has(w) && w.length > 2);
+  const saidStems = new Set(said.map(stemFr));
+  const used = suggested.filter((k) => k.split(/[-' ]/).filter((p) => p.length > 2).every((p) => saidStems.has(stemFr(p))) || said.some((s) => s.length > 5 && similar(s, k, 0.86)));
+  const kw = suggested.length ? used.length / suggested.length : 0;
+
+  const key = Array.from(new Set(tokenize(passage).filter((w) => !FR_STOP.has(w) && w.length > 3).map(stemFr)));
+  const recall = key.length ? key.filter((k) => saidStems.has(k)).length / Math.max(4, Math.round(key.length * 0.4)) : 0;
+  const precision = said.length ? said.filter((s) => key.includes(stemFr(s))).length / said.length : 0;
+  const meaning = Math.min(1, recall) * (0.4 + 0.6 * Math.min(1, precision * 2));
+
+  let grammar: number | null = null;
+  if (issues) {
+    const per10 = issues.length / Math.max(1, saidAll.length / 10);
+    grammar = Math.max(0, 1 - per10 * 0.35);
+  }
+  const length = Math.min(1, saidAll.length / 15);
+  let total = (0.35 * kw + 0.35 * meaning + 0.3 * (grammar ?? meaning)) * length;
+  if (meaning < 0.15) total = Math.min(total, 0.1);
+  return {
+    score: Math.round(total * 100),
+    keywordsUsed: used,
+    keywordsMissed: suggested.filter((k) => !used.includes(k)),
+    meaning: Math.round(meaning * 100),
+    grammar: grammar == null ? null : Math.round(grammar * 100),
+    issues: issues ?? [],
+  };
 }
 
 export function splitSentences(text: string): string[] {
