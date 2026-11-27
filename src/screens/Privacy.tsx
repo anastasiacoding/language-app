@@ -20,6 +20,7 @@ export default function Privacy() {
         <li><b>Learning content:</b> texts you add, saved words, favorite rules and verbs, daily goal.</li>
         <li><b>Learning results:</b> reading, translation and retelling scores, session dates and length, and the days you practiced (for your streak).</li>
         <li><b>Consents:</b> what you agreed to or withdrew, and when.</li>
+        <li><b>Usage statistics, only if you turn them on:</b> which screens you open, when you finish a reading, translation or retelling and its score, grammar and word-review answers (right or wrong), time spent in the app, your device and browser type, and an approximate location from your IP address. Never your name, email or the texts you read.</li>
         <li><b>Technical:</b> IP address and browser data in our providers’ security logs.</li>
       </ul>
       <p>We do not store voice recordings or the photos you scan.</p>
@@ -27,7 +28,7 @@ export default function Privacy() {
       <h2>Why, and on what legal basis</h2>
       <ul>
         <li>Running your account and saving your progress: performance of a contract (GDPR Art. 6(1)(b)).</li>
-        <li>Voice scoring and product news emails: your consent (Art. 6(1)(a)), which you can withdraw in Profile at any time.</li>
+        <li>Voice scoring, product news emails and usage statistics: your consent (Art. 6(1)(a)), which you can withdraw in Profile at any time.</li>
         <li>Security and fixing errors: our legitimate interest (Art. 6(1)(f)).</li>
         <li>Keeping a record of consents: legal obligation (Art. 6(1)(c)).</li>
       </ul>
@@ -41,6 +42,9 @@ export default function Privacy() {
         <li><b>Translation:</b> to translate and score your translations we send the French text (never your name or email) to MyMemory, operated by Translated srl in Italy.</li>
       </ul>
 
+      <h2>Usage statistics</h2>
+      <p>They’re off unless you turn them on, at sign-up or in Profile → Usage statistics. When they’re on, the app loads Google Tag Manager and Google Analytics 4 (Google Ireland Ltd.), which set analytics cookies (_ga) and send the events listed above to Google. Google may process this data in the United States under the EU–US Data Privacy Framework. We keep statistics for 2 months, Google signals and advertising features are turned off, and we use the data only to see which parts of the app help and which need work. Turn them off at any time: the app stops sending data and removes the analytics cookies.</p>
+
       <h2>Who processes data for us</h2>
       <ul>
         <li><b>Supabase</b>: database and sign-in, EU (Frankfurt, Germany).</li>
@@ -48,6 +52,7 @@ export default function Privacy() {
         <li><b>MyMemory (Translated srl)</b>: machine translation, Italy.</li>
         <li><b>LanguageTool (LanguageTooler GmbH)</b>: grammar check, Germany.</li>
         <li><b>Apple or Google</b>: speech recognition on your device.</li>
+        <li><b>Google (Tag Manager, Analytics 4)</b>: usage statistics, only with your consent. Google Ireland Ltd., data may go to the United States (EU–US Data Privacy Framework).</li>
       </ul>
 
       <h2>How long we keep it</h2>
@@ -71,7 +76,7 @@ export default function Privacy() {
       </ul>
 
       <h2>Age and storage</h2>
-      <p>The app is for people aged 15 and over. It stores a sign-in token and a few settings in your browser so you stay signed in. These are strictly necessary. We use no tracking or advertising cookies.</p>
+      <p>The app is for people aged 15 and over. It stores a sign-in token and a few settings in your browser so you stay signed in. These are strictly necessary. Analytics cookies are set only if you turn on usage statistics. We use no advertising cookies.</p>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase, latestConsents, setConsent } from "../lib/supabase";
 import { useAuth } from "../lib/auth";
 import { Header, Icon, Modal, Toggle } from "../components/ui";
+import { setAnalyticsConsent } from "../lib/analytics";
 
 const GOALS = [5, 10, 15, 20, 30, 45, 60];
 
@@ -24,8 +25,9 @@ export default function Profile() {
     supabase.from("profiles").select("daily_goal").maybeSingle().then(({ data }) => data && setGoal(data.daily_goal));
   }, []);
 
-  const flip = async (kind: "voice" | "newsletter", v: boolean) => {
+  const flip = async (kind: "voice" | "newsletter" | "analytics", v: boolean) => {
     setConsents((c) => ({ ...c, [kind]: v }));
+    if (kind === "analytics") setAnalyticsConsent(v);
     await setConsent(kind, v);
   };
 
@@ -102,6 +104,7 @@ export default function Profile() {
       <div className="card flat">
         <Row t="Voice scoring" s="Needed for reading, translation and retelling" right={<Toggle label="Voice scoring" on={!!consents.voice} onChange={(v) => flip("voice", v)} />} />
         <Row t="Product news by email" right={<Toggle label="Product news" on={!!consents.newsletter} onChange={(v) => flip("newsletter", v)} />} />
+        <Row t="Usage statistics" s="Anonymous, with Google Analytics. Helps improve the app" right={<Toggle label="Usage statistics" on={!!consents.analytics} onChange={(v) => flip("analytics", v)} />} />
       </div>
       <div className="card flat">
         <Row t="Download my data" s="A file with all your texts, words and progress" right={<Icon name="download" size={18} color="#6B5850" />} onClick={download} />

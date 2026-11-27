@@ -32,6 +32,7 @@ export function SignUp() {
   const [terms, setTerms] = useState(false);
   const [voice, setVoice] = useState(true);
   const [news, setNews] = useState(false);
+  const [stats, setStats] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [sent, setSent] = useState(false);
@@ -48,7 +49,7 @@ export function SignUp() {
       password,
       options: {
         emailRedirectTo: redirectTo(),
-        data: { name: name.trim(), consents: { age, terms, voice, newsletter: news } },
+        data: { name: name.trim(), consents: { age, terms, voice, newsletter: news, analytics: stats } },
       },
     });
     setBusy(false);
@@ -79,6 +80,7 @@ export function SignUp() {
         <label className="check"><input type="checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} /><span className="small">I accept the Terms of Use and <Link to="/privacy">Privacy Policy</Link><br /><span className="xs" style={{ color: "var(--scarlet)" }}>required</span></span></label>
         <label className="check"><input type="checkbox" checked={voice} onChange={(e) => setVoice(e.target.checked)} /><span className="small">Process my voice to score reading and translation. Recordings are never stored<br /><span className="xs muted">optional · needed for speaking exercises</span></span></label>
         <label className="check"><input type="checkbox" checked={news} onChange={(e) => setNews(e.target.checked)} /><span className="small">Email me product news<br /><span className="xs muted">optional</span></span></label>
+        <label className="check"><input type="checkbox" checked={stats} onChange={(e) => setStats(e.target.checked)} /><span className="small">Share anonymous usage statistics (Google Analytics) to help improve the app<br /><span className="xs muted">optional · uses analytics cookies</span></span></label>
       </div>
       {err && <p className="err">{err}</p>}
       <button className="btn primary" disabled={busy}>{busy ? "Creating…" : "Create account"}</button>

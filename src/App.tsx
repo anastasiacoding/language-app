@@ -1,4 +1,7 @@
+import { useEffect } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { setAnalyticsConsent, track, screenName } from "./lib/analytics";
+import { latestConsents } from "./lib/supabase";
 import { useAuth } from "./lib/auth";
 import { Spinner, TabBar } from "./components/ui";
 import About from "./screens/About";
@@ -25,6 +28,19 @@ const NO_TABS = ["/session", "/review", "/add", "/privacy", "/consents", "/pract
 export default function App() {
   const { session, loading, recovering } = useAuth();
   const loc = useLocation();
+  const uid = session?.user.id;
+
+  // statistics only for people who agreed to them
+  useEffect(() => {
+    if (!uid) return setAnalyticsConsent(false);
+    latestConsents().then((c) => {
+      setAnalyticsConsent(!!c.analytics);
+      track("page_view", screenName("#" + window.location.hash.slice(1)));
+    });
+  }, [uid]);
+  useEffect(() => {
+    track("page_view", screenName("#" + loc.pathname));
+  }, [loc.pathname]);
 
   if (loading)
     return (

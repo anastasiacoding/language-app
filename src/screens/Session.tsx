@@ -8,6 +8,7 @@ import { translateFrEn, translateLong } from "../lib/translate";
 import { gloss, tidyMeaning } from "../lib/ipa";
 import { recordActivity } from "../lib/activity";
 import { Header, Icon, Pron, Spinner, Steps, Wave } from "../components/ui";
+import { track } from "../lib/analytics";
 
 type Step = "read" | "translate" | "retell" | "results";
 
@@ -174,6 +175,7 @@ export default function Session() {
       for (let n = 0; n < chunkTokens[ci]; n++, k++) if (!r.words[k]?.ok) bad.add(ci);
     });
     setReading({ score: r.score, bad });
+    track("reading_done", "session", r.score);
   };
 
   const finishTranslation = async (said: string) => {
@@ -183,6 +185,7 @@ export default function Session() {
       const reference = await translateLong(passage);
       const r = scoreTranslation(reference, said);
       setTranslation({ score: r.score, reference, missed: r.missed, said });
+      track("translation_done", "session", r.score);
       if (reading) recordActivity("text"); // reading + translation is enough for the streak
     } catch (e: any) {
       setErr(e.message || "Couldn’t check the translation right now.");
@@ -195,7 +198,9 @@ export default function Session() {
     setBusy(true);
     const issues = await checkGrammar(said).catch(() => null);
     setBusy(false);
-    setRetell({ ...scoreRetelling(passage, said, suggested, issues), said });
+    const rr = scoreRetelling(passage, said, suggested, issues);
+    setRetell({ ...rr, said });
+    track("retell_done", "session", rr.score);
   };
 
   const cleanWord = (w: string) => w.replace(/^[«"“(\[—–-]+|[»"”)\].,;:!?…]+$/g, "").replace(/^(l|d|j|m|t|s|n|qu|c)['’]/i, "");

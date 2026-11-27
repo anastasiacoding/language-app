@@ -4,6 +4,7 @@ import { guessGender, loadAllNouns, elides, H_ASPIRE } from "../data/nouns";
 import { translateFrEn } from "../lib/translate";
 import { useFavorites } from "../lib/favorites";
 import { Icon, Seg } from "../components/ui";
+import { track } from "../lib/analytics";
 
 type Mode = "gender" | "conj" | "translate";
 const RECENT_KEY = "recent-gender";
@@ -48,6 +49,7 @@ export default function Reference() {
     const clean = w.replace(/^(le|la|l'|l’|un|une)\s*/, "");
     setWord(clean);
     const g = guessGender(clean);
+    track("check_word", "reference", g ? "found" : "not found");
     if (g) {
       const a = g.both ? "le/la " : elides(clean) && !H_ASPIRE.has(clean) ? "l’" : g.g === "m" ? "le " : "la ";
       const next = [`${a}${clean}|${clean}`, ...recent.filter((r) => !r.endsWith("|" + clean))].slice(0, 8);

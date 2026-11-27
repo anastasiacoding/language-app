@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { Header, Icon, Seg, Spinner } from "../components/ui";
 import { searchBooks, openBook, openLink, splitChapters, sourceStatus, type BookHit, type Chapter, type Source } from "../lib/books";
+import { track } from "../lib/analytics";
 
 type Mode = "menu" | "paste" | "link" | "photo" | "books" | "chapters";
 type Lib = Source | "gallica";
@@ -181,6 +182,7 @@ export default function AddText() {
       .single();
     setBusy(false);
     if (error) return setErr(error.message);
+    track("add_text", "add", `${text.trim().split(/\s+/).length} words`);
     nav(`/session/${data.id}`, { replace: true });
   };
 

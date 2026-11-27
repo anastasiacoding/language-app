@@ -4,6 +4,7 @@ import { supabase, type WordRow } from "../lib/supabase";
 import { speechSupported, startRecognition, type Recorder } from "../lib/speech";
 import { similar, tokenize } from "../lib/score";
 import { Header, Icon, Pron, Spinner, Wave, useMeaning } from "../components/ui";
+import { track } from "../lib/analytics";
 
 export default function Review() {
   const { mode } = useParams(); // "read" | "translate"
@@ -39,6 +40,7 @@ export default function Review() {
       ok = ref.length > 0 && tokenize(said).some((t) => ref.some((r) => r.length > 2 && similar(t, r, 0.75)));
     }
     setResult(ok);
+    track("review_word", `review/${mode}`, ok ? "right" : "wrong");
     if (ok) setScore((s) => s + 1);
     const streak = ok ? w.correct_streak + 1 : 0;
     await supabase.from("words").update({ reviews: w.reviews + 1, correct_streak: streak, learned: streak >= 3 }).eq("id", w.id);

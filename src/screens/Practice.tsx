@@ -6,6 +6,7 @@ import { recordActivity, GRAMMAR_MIN } from "../lib/activity";
 import { speechSupported, startRecognition, type Recorder } from "../lib/speech";
 import { similar, normalize } from "../lib/score";
 import { Header, Icon } from "../components/ui";
+import { track } from "../lib/analytics";
 
 export default function Practice() {
   const { id } = useParams();
@@ -27,6 +28,7 @@ export default function Practice() {
     if (chosen) return;
     setChosen(o);
     answered.current++;
+    track("grammar_answer", `practice/${id}`, o === item.answer ? "right" : "wrong");
     if (answered.current === GRAMMAR_MIN) recordActivity("grammar");
   };
 

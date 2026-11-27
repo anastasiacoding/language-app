@@ -3,10 +3,12 @@ import { useParams } from "react-router-dom";
 import { conjugate, TENSES, type Tense } from "../lib/conjugate";
 import { useFavorites } from "../lib/favorites";
 import { Header, Star } from "../components/ui";
+import { track } from "../lib/analytics";
 
 export default function Conjugation() {
   const { verb } = useParams();
   const c = useMemo(() => conjugate(decodeURIComponent(verb || "")), [verb]);
+  useEffect(() => track("conjugate", "conjugation", c.supported ? "found" : "not found"), [verb]); // eslint-disable-line react-hooks/exhaustive-deps
   const [sel, setSel] = useState<Tense[]>(["present", "passe"]);
   const { favs, toggle } = useFavorites("verb");
   const [en, setEn] = useState("");

@@ -8,6 +8,7 @@ const LABEL: Record<string, string> = {
   voice: "Voice scoring",
   reminders: "Practice reminders",
   newsletter: "Product news by email",
+  analytics: "Usage statistics (Google Analytics)",
 };
 
 export default function ConsentHistory() {
