@@ -2,11 +2,26 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../lib/auth";
+import { Seg } from "../components/ui";
 
 const redirectTo = () => window.location.origin + window.location.pathname;
 
 function Brand() {
   return <img src={import.meta.env.BASE_URL + "app-icon.svg"} width={64} height={64} alt="" style={{ borderRadius: 16 }} />;
+}
+
+/** Compact header for the log-in and sign-up screens, with a switch between them right at the top. */
+function AuthTop({ mode }: { mode: "login" | "signup" }) {
+  const nav = useNavigate();
+  return (
+    <>
+      <div className="row" style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+        <img src={import.meta.env.BASE_URL + "app-icon.svg"} width={44} height={44} alt="" style={{ borderRadius: 12 }} />
+        <b style={{ fontSize: 20 }}>French Lion</b>
+      </div>
+      <Seg items={[{ id: "login", label: "Log in" }, { id: "signup", label: "Create account" }]} value={mode} onChange={(m: string) => nav(m === "login" ? "/" : "/signup", { replace: true })} />
+    </>
+  );
 }
 
 export function SignUp() {
@@ -53,9 +68,9 @@ export function SignUp() {
 
   return (
     <form className="screen" onSubmit={submit}>
-      <Brand />
+      <AuthTop mode="signup" />
       <h1>Bienvenue !</h1>
-      <p className="muted small">French Lion: practice reading, grammar and conjugation. Make yourself proud.</p>
+      <p className="muted small">Practice reading, grammar and conjugation. Make yourself proud.</p>
       <label className="field"><span>Name</span><input className="input" value={name} onChange={(e) => setName(e.target.value)} autoComplete="given-name" /></label>
       <label className="field"><span>Email</span><input className="input" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" /></label>
       <label className="field"><span>Password</span><input className="input" type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" /></label>
@@ -67,9 +82,8 @@ export function SignUp() {
       </div>
       {err && <p className="err">{err}</p>}
       <button className="btn primary" disabled={busy}>{busy ? "Creating…" : "Create account"}</button>
-      <p className="center small muted">Already have an account? <Link to="/login" style={{ fontWeight: 600 }}>Log in</Link></p>
+      <p className="center small muted">Already have an account? <Link to="/" style={{ fontWeight: 600 }}>Log in</Link></p>
       <p className="center xs"><Link to="/about" style={{ color: "var(--muted)" }}>About the app</Link></p>
-      <p className="center small muted"><Link to="/reset">Forgot your password?</Link></p>
     </form>
   );
 }
@@ -91,15 +105,15 @@ export function LogIn() {
   };
   return (
     <form className="screen" onSubmit={submit}>
-      <Brand />
+      <AuthTop mode="login" />
       <h1>Bon retour !</h1>
-      <p className="muted small">Log in to continue practicing.</p>
       <label className="field"><span>Email</span><input className="input" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" /></label>
       <label className="field"><span>Password</span><input className="input" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" /></label>
       {err && <p className="err">{err}</p>}
       <button className="btn primary" disabled={busy}>{busy ? "Logging in…" : "Log in"}</button>
       <Link className="btn ghost" to="/reset">Forgot password?</Link>
-      <p className="center small muted">New here? <Link to="/" style={{ fontWeight: 600 }}>Create an account</Link></p>
+      <p className="center small muted">New here? <Link to="/signup" style={{ fontWeight: 600 }}>Create an account</Link></p>
+      <p className="center xs"><Link to="/about" style={{ color: "var(--muted)" }}>About the app</Link></p>
     </form>
   );
 }

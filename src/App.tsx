@@ -40,10 +40,11 @@ export default function App() {
       <div className="app">
         <Routes>
           <Route path="/login" element={<LogIn />} />
+          <Route path="/signup" element={<SignUp />} />
           <Route path="/reset" element={<ResetPassword />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/about" element={<About />} />
-          <Route path="*" element={<SignUp />} />
+          <Route path="*" element={<LogIn />} />
         </Routes>
       </div>
     );
