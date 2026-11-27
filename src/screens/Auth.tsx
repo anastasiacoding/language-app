@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../lib/auth";
+import { supabaseLinks } from "../lib/supabase";
 import { Seg } from "../components/ui";
 
 const redirectTo = () => window.location.origin + window.location.pathname;
@@ -44,7 +45,7 @@ export function SignUp() {
     if (password.length < 8) return setErr("Use at least 8 characters for your password.");
     if (!age || !terms) return setErr("Confirm your age and accept the Terms and Privacy Policy to continue.");
     setBusy(true);
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error } = await supabaseLinks.auth.signUp({
       email: email.trim(),
       password,
       options: {
@@ -55,6 +56,7 @@ export function SignUp() {
     setBusy(false);
     if (error) return setErr(error.message);
     if (!data.session) setSent(true);
+    else await supabase.auth.setSession(data.session); // email confirmation turned off: sign in right away
   };
 
   if (sent)
@@ -62,7 +64,7 @@ export function SignUp() {
       <div className="screen">
         <Brand />
         <h1>Check your email</h1>
-        <p className="muted">We sent a confirmation link to {email}. Open it on this device to finish creating your account.</p>
+        <p className="muted">We sent a confirmation link to {email}. Open it to finish creating your account.</p>
         <Link className="btn" to="/login">Go to log in</Link>
       </div>
     );
@@ -138,7 +140,7 @@ export function ResetPassword() {
     } catch {
       /* storage unavailable */
     }
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: redirectTo() });
+    const { error } = await supabaseLinks.auth.resetPasswordForEmail(email.trim(), { redirectTo: redirectTo() });
     if (error) setErr(error.message);
     else setDone(true);
   };

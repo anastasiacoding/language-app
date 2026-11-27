@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { supabase } from "./supabase";
+import { linkAuth, supabase } from "./supabase";
 
 interface AuthState {
   session: Session | null;
@@ -35,7 +35,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const cleanUrl = () => window.history.replaceState(null, "", window.location.pathname + window.location.hash);
     const expired = "This link has expired or was already used. Request a new one below.";
 
-    if (tokenHash) {
+    if (linkAuth.access_token) {
+      // a password-reset or confirmation link from our emails
+      supabase.auth.setSession({ access_token: linkAuth.access_token, refresh_token: linkAuth.refresh_token || "" }).then(({ data, error }) => {
+        if (error) setLinkError(expired);
+        else {
+          setSession(data.session);
+          if (linkAuth.type === "recovery") setRecovering(true);
+        }
+        linkAuth.access_token = undefined;
+        setLoading(false);
+      });
+    } else if (linkAuth.error) {
+      setLinkError(expired);
+      linkAuth.error = undefined;
+      supabase.auth.getSession().then(({ data }) => {
+        setSession(data.session);
+        setLoading(false);
+      });
+    } else if (tokenHash) {
       // Links from our emails carry a one-time token that works in any browser,
       // even if the reset was requested in the home-screen app and opened in Safari or Gmail.
       const type = (params.get("type") || "email") as "recovery" | "email" | "signup" | "magiclink";

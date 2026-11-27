@@ -4,9 +4,31 @@ import { createClient } from "@supabase/supabase-js";
 export const SUPABASE_URL = "https://sopybputouvalqmjqkcr.supabase.co";
 export const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_RBiZEF-rwKUKOJBDapqYDw_-SZBfGZ0";
 
+// Links in our emails (password reset, email confirmation) come back with the session in the URL hash:
+// #access_token=…&refresh_token=…&type=recovery. That works in any browser, unlike PKCE codes, which only
+// work where the link was requested (the home-screen app and Safari don’t share storage on iPhone).
+// The hash router also uses the hash, so we take the tokens out before anything else reads it.
+export const linkAuth: { access_token?: string; refresh_token?: string; type?: string; error?: string } = {};
+(() => {
+  const h = window.location.hash;
+  if (!/(^#|&)(access_token|error_description|error_code)=/.test(h.replace(/^#\/?/, "#"))) return;
+  const p = new URLSearchParams(h.replace(/^#\/?/, ""));
+  if (p.get("access_token")) {
+    linkAuth.access_token = p.get("access_token")!;
+    linkAuth.refresh_token = p.get("refresh_token") || "";
+    linkAuth.type = p.get("type") || "";
+  } else linkAuth.error = p.get("error_code") || p.get("error") || "link_error";
+  window.history.replaceState(null, "", window.location.pathname + "#/");
+})();
+
 export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   // PKCE puts the sign-in code in ?code=… instead of the URL hash, which the hash router uses.
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "pkce" },
+});
+
+/** Used only to request emails, so their links carry the session in the hash (see linkAuth above). */
+export const supabaseLinks = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  auth: { flowType: "implicit", persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: "sb-links" },
 });
 
 export type ConsentKind = "age" | "terms" | "voice" | "reminders" | "newsletter" | "analytics";
