@@ -8,3 +8,4 @@
 These derived files are shared under the same licence, CC BY-SA 4.0.
 
 - **ipa-dict** French (France) pronunciations by open-dict-data, [github.com/open-dict-data/ipa-dict](https://github.com/open-dict-data/ipa-dict) — MIT licence. Used for the IPA transcriptions (`public/ipa/`, built by `scripts/build-ipa.py`).
+- **English meanings of single words**: Wiktionary (CC BY-SA 4.0), from the French-English list built by Vuizur, [github.com/Vuizur/Wiktionary-Dictionaries](https://github.com/Vuizur/Wiktionary-Dictionaries). Used in `public/gloss/`, built by `scripts/build-gloss.py`.

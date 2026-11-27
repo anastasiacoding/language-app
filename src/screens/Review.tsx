@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { supabase, type WordRow } from "../lib/supabase";
 import { speechSupported, startRecognition, type Recorder } from "../lib/speech";
 import { similar, tokenize } from "../lib/score";
-import { Header, Icon, Pron, Spinner, Wave } from "../components/ui";
+import { Header, Icon, Pron, Spinner, Wave, useMeaning } from "../components/ui";
 
 export default function Review() {
   const { mode } = useParams(); // "read" | "translate"
@@ -24,6 +24,8 @@ export default function Review() {
     };
   }, []);
 
+  const meaning = useMeaning(queue?.[i]?.word, queue?.[i]?.translation ?? "");
+
   if (!queue) return <div className="screen" style={{ alignItems: "center", paddingTop: 80 }}><Spinner /></div>;
   const w = queue[i];
 
@@ -32,7 +34,7 @@ export default function Review() {
     let ok: boolean;
     if (mode === "read") ok = tokenize(said).some((t) => similar(t, tokenize(w.word)[0] ?? w.word, 0.8)) || similar(said.toLowerCase(), w.word.toLowerCase(), 0.8);
     else {
-      const ref = tokenize(w.translation);
+      const ref = tokenize(meaning + " " + w.translation);
       ok = ref.length > 0 && tokenize(said).some((t) => ref.some((r) => r.length > 2 && similar(t, r, 0.75)));
     }
     setResult(ok);
@@ -81,14 +83,14 @@ export default function Review() {
       <div className="card center" style={{ padding: "36px 20px", alignItems: "center", gap: 12 }}>
         <p style={{ fontSize: 30, fontWeight: 700 }}>{w.word}</p>
         <Pron word={w.word} size={19} />
-        {(mode === "read" || result !== null) && <p className="muted">{w.translation}</p>}
+        {(mode === "read" || result !== null) && <p className="muted">{meaning}</p>}
       </div>
       {heard && <p className="small muted center" style={{ fontStyle: "italic" }}>“{heard}”</p>}
       {result !== null ? (
         <>
           <div className="card tint row" style={{ flexDirection: "row" }}>
             <Icon name={result ? "check" : "x"} size={18} color="#5B4034" />
-            <b style={{ color: "#5B4034" }}>{result ? "Correct" : mode === "read" ? "Not quite. Check the pronunciation above and try again next time." : `It means: ${w.translation}`}</b>
+            <b style={{ color: "#5B4034" }}>{result ? "Correct" : mode === "read" ? "Not quite. Check the pronunciation above and try again next time." : `It means: ${meaning}`}</b>
           </div>
           <button className="btn primary" onClick={next}>Next</button>
         </>

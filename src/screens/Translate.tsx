@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { translateLong, translateFrEn } from "../lib/translate";
+import { gloss, tidyMeaning } from "../lib/ipa";
 import { speechSupported, startRecognition, type Recorder } from "../lib/speech";
 import { saveWords } from "../lib/supabase";
 import { guessGender } from "../data/nouns";
@@ -29,7 +30,7 @@ export default function Translate() {
       const ws = await Promise.all(
         uniq.map(async (w) => {
           const g = guessGender(w);
-          return { fr: w, en: g?.sure && g.en ? g.en : await translateFrEn(w).catch(() => ""), g: g?.sure ? (g.g === "m" ? "masculine" : "feminine") : undefined };
+          return { fr: w, en: (await gloss(w)) ?? (g?.sure && g.en ? g.en : tidyMeaning(await translateFrEn(w).catch(() => ""))), g: g?.sure ? (g.g === "m" ? "masculine" : "feminine") : undefined };
         }),
       );
       setWords(ws.filter((w) => w.en && w.en.toLowerCase() !== w.fr));

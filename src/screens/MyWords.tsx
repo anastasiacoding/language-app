@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase, type WordRow } from "../lib/supabase";
-import { Header, Icon, Seg, Spinner } from "../components/ui";
+import { Header, Icon, Seg, Spinner, Meaning, Pron } from "../components/ui";
 
 type Filter = "all" | "pronunciation" | "meaning";
 
@@ -55,8 +55,8 @@ export default function MyWords() {
             {list.map((w) => (
               <div className="list-row" key={w.id} style={{ cursor: "default" }}>
                 <div className="grow">
-                  <div className="t" style={{ textDecoration: w.learned ? "line-through" : "none", color: w.learned ? "var(--muted)" : undefined }}>{w.word}</div>
-                  <div className="s">{w.translation}</div>
+                  <div className="t" style={{ textDecoration: w.learned ? "line-through" : "none", color: w.learned ? "var(--muted)" : undefined }}>{w.word} <Pron word={w.word} size={13} quiet /></div>
+                  <div className="s"><Meaning word={w.word} fallback={w.translation} /></div>
                 </div>
                 <span className={"chip" + (w.reason === "pronunciation" ? " red" : "")}>{w.reason === "pronunciation" ? "pronunciation" : "meaning"}</span>
                 <button className="icon-btn" onClick={() => remove(w.id)} aria-label={`Delete ${w.word}`}><Icon name="trash" size={18} color="#6B5850" /></button>

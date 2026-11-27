@@ -64,7 +64,7 @@ export default function Privacy() {
 
       <h2>Credits</h2>
       <ul>
-        <li>Word genders, plurals and English meanings: Wiktionary, via kaikki.org (CC BY-SA 4.0).</li>
+        <li>Word genders, plurals and English meanings: Wiktionary, via kaikki.org and github.com/Vuizur/Wiktionary-Dictionaries (CC BY-SA 4.0).</li>
         <li>Word frequencies: Lexique 3.83 by Boris New and Christophe Pallier, lexique.org (CC BY-SA 4.0).</li>
         <li>Pronunciations (IPA): ipa-dict by open-dict-data, github.com/open-dict-data/ipa-dict (MIT licence).</li>
         <li>Font: Montserrat (SIL Open Font License).</li>

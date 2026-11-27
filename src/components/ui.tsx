@@ -136,7 +136,7 @@ export function Modal({ children, onClose }: { children: ReactNode; onClose: () 
 }
 
 /** Shows the IPA transcription of a French word, loaded on demand. */
-export function Pron({ word, size = 17 }: { word: string; size?: number }) {
+export function Pron({ word, size = 17, quiet }: { word: string; size?: number; quiet?: boolean }) {
   const [t, setT] = useState<string | null | undefined>(undefined);
   useEffect(() => {
     let live = true;
@@ -146,7 +146,26 @@ export function Pron({ word, size = 17 }: { word: string; size?: number }) {
       live = false;
     };
   }, [word]);
+  if (quiet && !t) return null;
   if (t === undefined) return <span className="ipa muted" style={{ fontSize: size }}>…</span>;
   if (t === null) return <span className="xs muted">No transcription for this word yet.</span>;
   return <span className="ipa" style={{ fontSize: size }}>{t}</span>;
+}
+
+/** English meaning of a French word: the Wiktionary dictionary first, else the saved machine translation (tidied). */
+export function useMeaning(word: string | undefined, fallback = "") {
+  const tidy = fallback.trim().replace(/^["“«]+|["”»]+$/g, "").replace(/[.。]+$/, "").trim();
+  const [m, setM] = useState<string | null>(null);
+  useEffect(() => {
+    let live = true;
+    setM(null);
+    if (word) import("../lib/ipa").then(({ gloss }) => gloss(word)).then((g) => live && setM(g));
+    return () => {
+      live = false;
+    };
+  }, [word]);
+  return m ?? tidy;
+}
+export function Meaning({ word, fallback, className }: { word: string; fallback?: string; className?: string }) {
+  return <span className={className}>{useMeaning(word, fallback)}</span>;
 }

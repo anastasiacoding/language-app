@@ -5,6 +5,7 @@ import { speechSupported, startRecognition, type Recorder } from "../lib/speech"
 import { scoreReading, scoreRetelling, scoreTranslation, splitPassages, tokenize, retellKeywords, type RetellResult } from "../lib/score";
 import { checkGrammar } from "../lib/books";
 import { translateFrEn, translateLong } from "../lib/translate";
+import { gloss, tidyMeaning } from "../lib/ipa";
 import { recordActivity } from "../lib/activity";
 import { Header, Icon, Pron, Spinner, Steps, Wave } from "../components/ui";
 
@@ -169,7 +170,7 @@ export default function Session() {
       ...uniq(mean).map((w) => ({ word: w, reason: "meaning" as const })),
       ...uniq(pron).filter((w) => !mean.map((m) => m.toLowerCase()).includes(w)).map((w) => ({ word: w, reason: "pronunciation" as const })),
     ].slice(0, 12);
-    const withT = await Promise.all(list.map(async (w) => ({ ...w, translation: await translateFrEn(w.word).catch(() => "") })));
+    const withT = await Promise.all(list.map(async (w) => ({ ...w, translation: (await gloss(w.word)) ?? tidyMeaning(await translateFrEn(w.word).catch(() => "")) })));
     setPracticeWords(withT);
     const { data: u } = await supabase.auth.getUser();
     await supabase.from("sessions").insert({
