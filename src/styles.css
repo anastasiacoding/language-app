@@ -167,3 +167,5 @@ textarea.input { height: auto; min-height: 160px; padding: 12px 16px; resize: ve
 @keyframes lion-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.015); } }
 @keyframes lion-sway { 0%, 100% { transform: rotate(-1deg); } 50% { transform: rotate(1deg) translateY(2px); } }
 @media (prefers-reduced-motion: reduce) { .lion * { animation: none !important; transition: none !important; } }
+.ipa { font-family: "Charis SIL", "Doulos SIL", "Gentium Plus", "Noto Sans", "Segoe UI", system-ui, sans-serif; color: #5B4034; letter-spacing: .01em; }
+.reading .w.picked { outline: 2px solid var(--scarlet); outline-offset: 1px; }

@@ -6,3 +6,5 @@
 - **Lexique 3.83** by Boris New and Christophe Pallier ([lexique.org](http://www.lexique.org)) — licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). Used for word frequencies.
 
 These derived files are shared under the same licence, CC BY-SA 4.0.
+
+- **ipa-dict** French (France) pronunciations by open-dict-data, [github.com/open-dict-data/ipa-dict](https://github.com/open-dict-data/ipa-dict) — MIT licence. Used for the IPA transcriptions (`public/ipa/`, built by `scripts/build-ipa.py`).

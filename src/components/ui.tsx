@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 
 const P: Record<string, string> = {
@@ -133,4 +133,20 @@ export function Modal({ children, onClose }: { children: ReactNode; onClose: () 
       </div>
     </div>
   );
+}
+
+/** Shows the IPA transcription of a French word, loaded on demand. */
+export function Pron({ word, size = 17 }: { word: string; size?: number }) {
+  const [t, setT] = useState<string | null | undefined>(undefined);
+  useEffect(() => {
+    let live = true;
+    setT(undefined);
+    import("../lib/ipa").then(({ ipa }) => ipa(word)).then((r) => live && setT(r));
+    return () => {
+      live = false;
+    };
+  }, [word]);
+  if (t === undefined) return <span className="ipa muted" style={{ fontSize: size }}>…</span>;
+  if (t === null) return <span className="xs muted">No transcription for this word yet.</span>;
+  return <span className="ipa" style={{ fontSize: size }}>{t}</span>;
 }

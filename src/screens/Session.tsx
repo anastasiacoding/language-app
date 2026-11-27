@@ -6,7 +6,7 @@ import { scoreReading, scoreRetelling, scoreTranslation, splitPassages, tokenize
 import { checkGrammar } from "../lib/books";
 import { translateFrEn, translateLong } from "../lib/translate";
 import { recordActivity } from "../lib/activity";
-import { Header, Icon, Spinner, Steps, Wave } from "../components/ui";
+import { Header, Icon, Pron, Spinner, Steps, Wave } from "../components/ui";
 
 type Step = "read" | "translate" | "retell" | "results";
 
@@ -41,6 +41,7 @@ export default function Session() {
 
   // results per step
   const [reading, setReading] = useState<{ score: number; bad: Set<number> } | null>(null);
+  const [picked, setPicked] = useState<number | null>(null);
   const [translation, setTranslation] = useState<{ score: number; reference: string; missed: string[]; said: string } | null>(null);
   const [retell, setRetell] = useState<(RetellResult & { said: string }) | null>(null);
   const [unknown, setUnknown] = useState<Set<number>>(new Set());
@@ -252,19 +253,32 @@ export default function Session() {
             <p>
               {chunks.map((c, i) => (
                 <span key={i}>
-                  <span className={"w " + (reading ? (reading.bad.has(i) ? "bad" : "good") : "")}>{c}</span>{" "}
+                  <span
+                    className={"w " + (reading ? (reading.bad.has(i) ? "bad" : "good") : "") + (picked === i ? " picked" : "")}
+                    onClick={reading ? () => setPicked(picked === i ? null : i) : undefined}
+                  >{c}</span>{" "}
                 </span>
               ))}
             </p>
           </div>
+          {reading && picked !== null && (
+            <div className="card row" style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: "14px 16px" }}>
+              <div className="grow stack" style={{ gap: 2 }}>
+                <b style={{ fontSize: 18 }}>{chunks[picked].replace(/^[«"“(\[—–-]+|[»"”)\].,;:!?…]+$/g, "")}</b>
+                <Pron word={chunks[picked]} size={18} />
+              </div>
+              <button className="icon-btn" aria-label="Close" onClick={() => setPicked(null)}><Icon name="x" size={18} color="#6B5850" /></button>
+            </div>
+          )}
           {reading ? (
             <>
               <div className="card tint row between">
                 <div><b style={{ fontSize: 22 }}>{reading.score}%</b> <span className="small muted">reading accuracy</span></div>
                 <span className="row xs muted" style={{ gap: 6 }}><span style={{ width: 16, height: 2, background: "var(--scarlet)" }} />to practice</span>
               </div>
+              {picked === null && <p className="xs muted center">Tap a word to see how it’s pronounced.</p>}
               <div className="row" style={{ gap: 10 }}>
-                <button className="btn" onClick={() => { setReading(null); resetCapture(); }}><Icon name="refresh" size={18} /> Again</button>
+                <button className="btn" onClick={() => { setReading(null); setPicked(null); resetCapture(); }}><Icon name="refresh" size={18} /> Again</button>
                 <button className="btn primary" onClick={() => { resetCapture(); setTyping(false); setStep("translate"); }}>Next</button>
               </div>
             </>
