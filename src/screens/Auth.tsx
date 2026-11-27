@@ -91,6 +91,7 @@ export function SignUp() {
 }
 
 export function LogIn() {
+  const { linkError, setLinkError } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
@@ -108,6 +109,12 @@ export function LogIn() {
   return (
     <form className="screen" onSubmit={submit}>
       <AuthTop mode="login" />
+      {linkError && (
+        <div className="card" style={{ borderColor: "var(--scarlet)", gap: 8 }}>
+          <p className="small" style={{ margin: 0 }}>{linkError}</p>
+          <Link className="btn sm" to="/reset" onClick={() => setLinkError("")}>Send a new link</Link>
+        </div>
+      )}
       <h1>Bon retour !</h1>
       <label className="field"><span>Email</span><input className="input" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" /></label>
       <label className="field"><span>Password</span><input className="input" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" /></label>
