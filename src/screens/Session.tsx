@@ -48,6 +48,18 @@ export default function Session() {
   // results per step
   const [reading, setReading] = useState<{ score: number; bad: Set<number> } | null>(null);
   const [picked, setPicked] = useState<number | null>(null);
+  const [pickRect, setPickRect] = useState<{ x: number; top: number; bottom: number } | null>(null);
+  // the popup is placed on the screen, so close it when anything scrolls
+  useEffect(() => {
+    if (picked === null) return;
+    const close = () => setPicked(null);
+    window.addEventListener("scroll", close, true);
+    window.addEventListener("resize", close);
+    return () => {
+      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("resize", close);
+    };
+  }, [picked]);
   const [translation, setTranslation] = useState<{ score: number; reference: string; missed: string[]; said: string } | null>(null);
   const [retell, setRetell] = useState<(RetellResult & { said: string }) | null>(null);
   const [unknown, setUnknown] = useState<Set<number>>(new Set());
@@ -171,6 +183,7 @@ export default function Session() {
       const reference = await translateLong(passage);
       const r = scoreTranslation(reference, said);
       setTranslation({ score: r.score, reference, missed: r.missed, said });
+      if (reading) recordActivity("text"); // reading + translation is enough for the streak
     } catch (e: any) {
       setErr(e.message || "Couldn’t check the translation right now.");
     }
@@ -208,7 +221,7 @@ export default function Session() {
       duration_sec: Math.min(7200, Math.round((Date.now() - startedAt.current) / 1000)),
     });
     await saveWords(withT.map((w) => ({ ...w, text_id: text!.id })));
-    if (reading && translation && retell) await recordActivity("text");
+    if (reading && translation) await recordActivity("text");
     await supabase.from("texts").update({ passage_index: text!.passage_index + 1 }).eq("id", text!.id);
     setBusy(false);
     setStep("results");
@@ -283,19 +296,16 @@ export default function Session() {
                 <span key={i}>
                   <span
                     className={"w " + (reading ? (reading.bad.has(i) ? "bad" : "good") : "") + (picked === i ? " picked" : "")}
-                    onClick={reading ? () => setPicked(picked === i ? null : i) : undefined}
+                    onClick={reading ? (e) => { const r = e.currentTarget.getBoundingClientRect(); setPickRect({ x: r.left + r.width / 2, top: r.top, bottom: r.bottom }); setPicked(picked === i ? null : i); } : undefined}
                   >{c}</span>{" "}
                 </span>
               ))}
             </p>
           </div>
-          {reading && picked !== null && (
-            <div className="card row" style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: "14px 16px" }}>
-              <div className="grow stack" style={{ gap: 2 }}>
-                <b style={{ fontSize: 18 }}>{chunks[picked].replace(/^[«"“(\[—–-]+|[»"”)\].,;:!?…]+$/g, "")}</b>
-                <Pron word={chunks[picked]} size={18} />
-              </div>
-              <button className="icon-btn" aria-label="Close" onClick={() => setPicked(null)}><Icon name="x" size={18} color="#6B5850" /></button>
+          {reading && picked !== null && pickRect && (
+            <div className="pron-pop" style={{ left: Math.min(Math.max(pickRect.x, 80), window.innerWidth - 80), ...(pickRect.top > 90 ? { top: pickRect.top - 8, transform: "translate(-50%, -100%)" } : { top: pickRect.bottom + 8, transform: "translate(-50%, 0)" }) }} onClick={() => setPicked(null)}>
+              <b>{chunks[picked].replace(/^[«"“(\[—–-]+|[»"”)\].,;:!?…]+$/g, "")}</b>
+              <Pron word={chunks[picked]} size={17} />
             </div>
           )}
           {reading ? (
@@ -411,7 +421,7 @@ export default function Session() {
               {live && <div className="card soft"><span className="label">You’re saying</span><p style={{ fontStyle: "italic" }}>{live}</p></div>}
               {busy && <div className="row"><Spinner /><span className="small muted">Checking your retelling…</span></div>}
               {typeInstead(finishRetell, "Votre résumé en français")}
-              <button className="btn ghost" onClick={saveAll} disabled={busy}>Skip (this text won’t count for your streak)</button>
+              <button className="btn ghost" onClick={saveAll} disabled={busy}>Skip retelling, it’s optional</button>
             </>
           )}
           {err && <p className="err">{err}</p>}

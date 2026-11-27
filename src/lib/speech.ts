@@ -23,12 +23,15 @@ interface Handlers {
 
 // Only one recognizer may run at a time: a forgotten one keeps the microphone busy.
 let active: Recorder | null = null;
+let lastEnd = 0;
 
 /**
  * Starts continuous recognition. Calls onUpdate(finalText, interimText) as words arrive.
  * Restarts quietly when the browser stops after a pause, until stop() or abort() is called.
  */
 export function startRecognition(lang: string, onUpdate: Handlers["onUpdate"], onError?: Handlers["onError"], onAutoEnd?: Handlers["onAutoEnd"]): Recorder {
+  // iPhone needs a moment to release the microphone after the previous recognizer
+  const hadPrevious = !!active || Date.now() - lastEnd < 400;
   active?.abort();
   const w = window as any;
   const SR = w.SpeechRecognition || w.webkitSpeechRecognition;
@@ -39,6 +42,7 @@ export function startRecognition(lang: string, onUpdate: Handlers["onUpdate"], o
   let endWaiter: (() => void) | null = null;
   let segments = 0; // how many times the browser has been (re)started
   let quietRestarts = 0; // restarts in a row without hearing anything
+  let busyRetries = 0; // retries when the microphone is still held by the previous recording
 
   const heardSomething = () => (finalText + interim).trim().length > 0;
 
@@ -87,11 +91,16 @@ export function startRecognition(lang: string, onUpdate: Handlers["onUpdate"], o
           if (segments > 1) return autoEnd();
           return fail("Microphone access was blocked. Allow it for this site in your browser settings, then try again.");
         case "audio-capture":
-          return fail("The microphone is busy or unavailable. Close other apps that use it and try again.");
+          if (busyRetries < 2 && !heardSomething()) {
+            busyRetries++;
+            quietRestarts--; // the restart below shouldn't count as silence
+            return; // onend follows and starts again a bit later
+          }
+          return fail("The microphone is busy or unavailable. Close other apps that use it and try again. (audio-capture)");
         case "network":
           return heardSomething() ? autoEnd() : fail("Speech recognition needs an internet connection. Check your connection and try again.");
         default:
-          return heardSomething() ? autoEnd() : fail("Recording stopped unexpectedly. Tap the microphone to try again.");
+          return heardSomething() ? autoEnd() : fail(`Recording stopped unexpectedly. Tap the microphone to try again. (${e.error})`);
       }
     };
     rec.onend = () => {
@@ -101,6 +110,7 @@ export function startRecognition(lang: string, onUpdate: Handlers["onUpdate"], o
         interim = "";
         onUpdate(finalText, "");
       }
+      lastEnd = Date.now();
       if (stopped) {
         endWaiter?.();
         return;
@@ -114,7 +124,7 @@ export function startRecognition(lang: string, onUpdate: Handlers["onUpdate"], o
         } catch {
           autoEnd();
         }
-      }, 200);
+      }, busyRetries ? 500 : 200);
     };
     rec.start();
   };
@@ -151,11 +161,16 @@ export function startRecognition(lang: string, onUpdate: Handlers["onUpdate"], o
   };
   active = recorder;
 
-  try {
-    segments = 1;
-    begin();
-  } catch {
-    fail("Could not start the microphone. Close other apps that use it and try again.");
-  }
+  const first = () => {
+    if (stopped) return;
+    try {
+      segments = 1;
+      begin();
+    } catch {
+      fail("Could not start the microphone. Close other apps that use it and try again.");
+    }
+  };
+  if (hadPrevious) setTimeout(first, 350);
+  else first();
   return recorder;
 }

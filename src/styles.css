@@ -169,3 +169,8 @@ textarea.input { height: auto; min-height: 160px; padding: 12px 16px; resize: ve
 @media (prefers-reduced-motion: reduce) { .lion * { animation: none !important; transition: none !important; } }
 .ipa { font-family: "Charis SIL", "Doulos SIL", "Gentium Plus", "Noto Sans", "Segoe UI", system-ui, sans-serif; color: #5B4034; letter-spacing: .01em; }
 .reading .w.picked { outline: 2px solid var(--scarlet); outline-offset: 1px; }
+.pron-pop { position: fixed; z-index: 30; background: #3A2620; color: #FFF3E6; border-radius: 12px; padding: 8px 14px; display: flex; flex-direction: column; align-items: center; gap: 2px; box-shadow: 0 6px 20px rgba(58,38,32,.28); max-width: 220px; text-align: center; pointer-events: auto; animation: pop .14s ease-out; }
+.pron-pop b { font-size: 16px; }
+.pron-pop .ipa { color: #FFE2C4; }
+.pron-pop .muted, .pron-pop .xs { color: #E8D3C4; }
+@keyframes pop { from { opacity: 0; } to { opacity: 1; } }

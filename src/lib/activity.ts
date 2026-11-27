@@ -1,7 +1,7 @@
 import { supabase } from "./supabase";
 import type { Mood } from "../components/Lion";
 
-// A day counts toward the streak when you finish a text (reading + translation + retelling)
+// A day counts toward the streak when you read and translate a text (retelling is optional)
 // or practice grammar (at least 5 examples). Reviewing words doesn't count.
 export const GRAMMAR_MIN = 5;
 

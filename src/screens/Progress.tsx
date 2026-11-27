@@ -40,7 +40,7 @@ const avg = (a: (number | null)[]) => {
 };
 
 const MOOD_TEXT: Record<string, (streak: number) => string> = {
-  happy: (s) => (s > 0 ? `Your lion is proud of you: ${s}-day streak!` : "Your lion is ready. Finish a text or practice grammar today."),
+  happy: (s) => (s > 0 ? `Your lion is proud of you: ${s}-day streak!` : "Your lion is ready. Read and translate a text, or practice grammar today."),
   neutral: () => "You missed yesterday. Your lion isn’t smiling.",
   sad: () => "Two days without French. Your lion is getting sad.",
   droopy: () => "Your lion’s mane is drooping. Come back and practice a little!",
@@ -118,7 +118,7 @@ export default function Progress() {
         <button className="btn ghost sm" onClick={() => setShowRule(!showRule)}>How does the streak work?</button>
         {showRule && (
           <div className="notice" style={{ width: "100%" }}>
-            A day counts when you either <b>finish a text</b> (reading, translation and retelling, all three) or <b>practice grammar</b> ({GRAMMAR_MIN}+ examples). Reviewing words and checking genders don’t count. Miss one day and your lion stops smiling, two days and it gets sad, three days and its mane droops. Practice again and it cheers up right away.
+            A day counts when you either <b>read and translate a text</b> (retelling is a bonus, not required) or <b>practice grammar</b> ({GRAMMAR_MIN}+ examples). Reviewing words and checking genders don’t count. Miss one day and your lion stops smiling, two days and it gets sad, three days and its mane droops. Practice again and it cheers up right away.
           </div>
         )}
       </div>
