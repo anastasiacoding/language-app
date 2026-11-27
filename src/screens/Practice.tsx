@@ -38,8 +38,9 @@ export default function Practice() {
   };
 
   const voice = () => {
-    if (listening) {
-      rec.current?.stop();
+    if (listening || rec.current) {
+      rec.current?.abort();
+      rec.current = null;
       setListening(false);
       return;
     }
@@ -54,10 +55,20 @@ export default function Practice() {
         .sort((a, b) => b.n.length - a.n.length)
         .find(({ n }) => said.replace(/’/g, "'").split(/\s+/).some((w) => similar(w, n.replace(/'$/, ""), 0.85)) || said.includes(n));
       if (match && f) {
-        rec.current?.stop();
+        rec.current?.abort();
+        rec.current = null;
         setListening(false);
         choose(match.o);
       }
+    },
+    (msg) => {
+      setHeard(msg);
+      setListening(false);
+      rec.current = null;
+    },
+    () => {
+      rec.current = null;
+      setListening(false);
     });
   };
 

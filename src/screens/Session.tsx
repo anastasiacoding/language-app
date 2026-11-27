@@ -11,10 +11,15 @@ import { Header, Icon, Pron, Spinner, Steps, Wave } from "../components/ui";
 
 type Step = "read" | "translate" | "retell" | "results";
 
-function MicDock({ recording, onToggle, hint }: { recording: boolean; onToggle: () => void; hint: string }) {
+function MicDock({ recording, onToggle, hint, onRestart }: { recording: boolean; onToggle: () => void; hint: string; onRestart?: () => void }) {
   return (
     <div className="micdock">
       {recording && <Wave />}
+      {recording && onRestart && (
+        <button className="btn ghost" style={{ height: 34, fontSize: 14, padding: "0 12px" }} onClick={onRestart}>
+          <Icon name="refresh" size={16} /> Start over
+        </button>
+      )}
       <button className={"mic" + (recording ? " rec" : "")} onClick={onToggle} aria-label={recording ? "Stop recording" : "Start recording"}>
         {recording ? <span style={{ width: 26, height: 26, borderRadius: 6, background: "#FFF3E6" }} /> : <Icon name="mic" size={34} color="#FFF3E6" />}
       </button>
@@ -94,14 +99,14 @@ export default function Session() {
     setInterim("");
     setHeard(said);
     finishing.current = false;
+    if (!said.trim()) {
+      setErr("We didn’t hear anything. Tap the microphone and speak a little closer to the phone.");
+      return;
+    }
     onDone(said);
   };
 
-  const toggle = (lang: string, onDone: (said: string) => void, autoDone?: (said: string) => boolean) => {
-    if (recording || recRef.current) {
-      stopAndFinish(onDone);
-      return;
-    }
+  const startRec = (lang: string, onDone: (said: string) => void, autoDone?: (said: string) => boolean) => {
     resetCapture();
     recStart.current = Date.now();
     setRecording(true);
@@ -115,9 +120,30 @@ export default function Session() {
       (msg) => {
         setErr(msg);
         setRecording(false);
+        setInterim("");
         recRef.current = null;
+        finishing.current = false;
       },
+      // the browser stopped by itself (long pause, iPhone limits): score what was heard
+      () => stopAndFinish(onDone),
     );
+  };
+
+  const toggle = (lang: string, onDone: (said: string) => void, autoDone?: (said: string) => boolean) => {
+    if (busy) return;
+    if (recRef.current) {
+      stopAndFinish(onDone);
+      return;
+    }
+    startRec(lang, onDone, autoDone);
+  };
+
+  /** Throws away what was said so far and listens again. */
+  const restart = (lang: string, onDone: (said: string) => void, autoDone?: (said: string) => boolean) => {
+    recRef.current?.abort();
+    recRef.current = null;
+    finishing.current = false;
+    startRec(lang, onDone, autoDone);
   };
 
   /** Stops on its own once the last words of the passage have been read. */
@@ -227,9 +253,10 @@ export default function Session() {
       <div className="stack">
         <textarea className="input" style={{ minHeight: 100 }} placeholder={placeholder} value={typed} onChange={(e) => setTyped(e.target.value)} />
         <button className="btn primary" disabled={busy} onClick={() => onSubmit(typed)}>{busy ? "Checking…" : "Check"}</button>
+        {supported && <button className="btn ghost" onClick={() => { setTyping(false); setTyped(""); setErr(""); }}><Icon name="mic" size={18} /> Use voice instead</button>}
       </div>
     ) : (
-      <button className="btn ghost" onClick={() => setTyping(true)}>Type instead</button>
+      <button className="btn ghost" disabled={recording} onClick={() => { setTyping(true); setErr(""); }}>Type instead</button>
     );
 
   return (
@@ -291,7 +318,7 @@ export default function Session() {
             </>
           )}
           {err && <p className="err">{err}</p>}
-          {!reading && supported && <MicDock recording={recording} onToggle={() => toggle("fr-FR", finishReading, readToEnd)} hint={recording ? `${timer} · stops by itself at the end, or tap` : "Tap and read the passage aloud"} />}
+          {!reading && supported && <MicDock recording={recording} onRestart={() => restart("fr-FR", finishReading, readToEnd)} onToggle={() => toggle("fr-FR", finishReading, readToEnd)} hint={recording ? `${timer} · stops by itself at the end, or tap` : "Tap and read the passage aloud"} />}
         </>
       )}
 
@@ -320,9 +347,10 @@ export default function Session() {
               </div>
               <p className="xs muted">The score compares meaning word by word, so it’s approximate. Machine translation by MyMemory.</p>
               <div className="row" style={{ gap: 10 }}>
-                <button className="btn" onClick={() => { setTranslation(null); resetCapture(); }}><Icon name="refresh" size={18} /> Again</button>
+                <button className="btn" onClick={() => { setTranslation(null); resetCapture(); setTyping(false); }}><Icon name="refresh" size={18} /> Again</button>
                 <button className="btn primary" onClick={() => { resetCapture(); setTyping(false); setStep("retell"); }}>Next</button>
               </div>
+              <button className="btn ghost" onClick={() => { const said = translation.said; setTranslation(null); resetCapture(); setTyped(said); setTyping(true); }}><Icon name="pen" size={18} /> Edit as text</button>
             </>
           ) : (
             <>
@@ -332,7 +360,7 @@ export default function Session() {
             </>
           )}
           {err && <p className="err">{err}</p>}
-          {!translation && supported && !typing && <MicDock recording={recording} onToggle={() => toggle("en-US", finishTranslation)} hint={recording ? `${timer} · tap to finish` : "Say your translation in English"} />}
+          {!translation && supported && !typing && <MicDock recording={recording} onRestart={() => restart("en-US", finishTranslation)} onToggle={() => toggle("en-US", finishTranslation)} hint={recording ? `${timer} · tap to finish` : "Say your translation in English"} />}
         </>
       )}
 
@@ -373,9 +401,10 @@ export default function Session() {
               </div>
               <p className="xs muted">Grammar is checked by LanguageTool. Meaning is compared by shared words, so it’s approximate.</p>
               <div className="row" style={{ gap: 10 }}>
-                <button className="btn" onClick={() => { setRetell(null); resetCapture(); }}><Icon name="refresh" size={18} /> Again</button>
+                <button className="btn" onClick={() => { setRetell(null); resetCapture(); setTyping(false); }}><Icon name="refresh" size={18} /> Again</button>
                 <button className="btn primary" disabled={busy} onClick={saveAll}>{busy ? "Saving…" : "See results"}</button>
               </div>
+              <button className="btn ghost" onClick={() => { const said = retell.said; setRetell(null); resetCapture(); setTyped(said); setTyping(true); }}><Icon name="pen" size={18} /> Edit as text</button>
             </>
           ) : (
             <>
@@ -386,7 +415,7 @@ export default function Session() {
             </>
           )}
           {err && <p className="err">{err}</p>}
-          {!retell && supported && !typing && <MicDock recording={recording} onToggle={() => toggle("fr-FR", finishRetell)} hint={recording ? `${timer} · tap to finish` : "Retell it in French"} />}
+          {!retell && supported && !typing && <MicDock recording={recording} onRestart={() => restart("fr-FR", finishRetell)} onToggle={() => toggle("fr-FR", finishRetell)} hint={recording ? `${timer} · tap to finish` : "Retell it in French"} />}
         </>
       )}
 

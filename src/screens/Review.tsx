@@ -12,6 +12,7 @@ export default function Review() {
   const [i, setI] = useState(0);
   const [listening, setListening] = useState(false);
   const [heard, setHeard] = useState("");
+  const [micErr, setMicErr] = useState("");
   const [result, setResult] = useState<null | boolean>(null);
   const [typed, setTyped] = useState("");
   const [score, setScore] = useState(0);
@@ -43,23 +44,36 @@ export default function Review() {
     await supabase.from("words").update({ reviews: w.reviews + 1, correct_streak: streak, learned: streak >= 3 }).eq("id", w.id);
   };
 
+  const finish = async () => {
+    setListening(false);
+    const said = (await rec.current?.stop()) ?? heard;
+    rec.current = null;
+    setHeard(said);
+    if (!said.trim()) return setMicErr("We didn’t hear anything. Tap the microphone and try again.");
+    check(said);
+  };
+
   const mic = async () => {
-    if (listening) {
-      setListening(false);
-      const said = (await rec.current?.stop()) ?? heard;
-      rec.current = null;
-      setHeard(said);
-      check(said);
-      return;
-    }
+    if (rec.current) return finish();
     setHeard("");
+    setMicErr("");
     setListening(true);
-    rec.current = startRecognition(mode === "read" ? "fr-FR" : "en-US", (f, it) => setHeard((f + " " + it).trim()));
+    rec.current = startRecognition(
+      mode === "read" ? "fr-FR" : "en-US",
+      (f, it) => setHeard((f + " " + it).trim()),
+      (msg) => {
+        setMicErr(msg);
+        setListening(false);
+        rec.current = null;
+      },
+      () => finish(),
+    );
   };
 
   const next = () => {
     setResult(null);
     setHeard("");
+    setMicErr("");
     setTyped("");
     setI(i + 1);
   };
@@ -86,6 +100,7 @@ export default function Review() {
         {(mode === "read" || result !== null) && <p className="muted">{meaning}</p>}
       </div>
       {heard && <p className="small muted center" style={{ fontStyle: "italic" }}>“{heard}”</p>}
+      {micErr && <p className="err center">{micErr}</p>}
       {result !== null ? (
         <>
           <div className="card tint row" style={{ flexDirection: "row" }}>
