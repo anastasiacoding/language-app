@@ -85,7 +85,7 @@ ${table}
 <h2>Examples</h2>
 <div class="card">${r.examples.map(([fr, en]) => `<p class="ex" lang="fr"><span class="fr">${esc(fr)}</span><br /><span class="en" lang="en">${esc(en)}</span></p>`).join("")}</div>
 <a class="cta" href="/#/grammar/${r.id}">Practice ${esc(r.title.toLowerCase())} with free exercises</a>
-<p class="small" style="text-align:center">Endless exercises in the free French Lion app. No ads, works on iPhone, Android and computers.</p>
+<p class="small" style="text-align:center">Endless exercises in the French Lion app. You need a free account: no ads, no subscription. Works on iPhone, Android and computers.</p>
 <div class="pager"><span>${prev ? `← <a href="/grammar/${prev.id}/">${esc(prev.title)}</a>` : ""}</span><span>${next ? `<a href="/grammar/${next.id}/">${esc(next.title)}</a> →` : ""}</span></div>`;
   const jsonld = [
     {
