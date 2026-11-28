@@ -42,6 +42,17 @@
         "image": "https://frenchlion.app/icon-512.png"
       }
     </script>
+    <script>
+      // An older service worker can answer the open content pages with the app shell. Drop it and load the real page once.
+      (function () {
+        var p = location.pathname;
+        if (!/\/(grammar|read-french-aloud|free-french-books)\//.test(p)) return;
+        try { if (sessionStorage.getItem("fl-heal") === p) return; sessionStorage.setItem("fl-heal", p); } catch (e) {}
+        var go = function () { location.reload(); };
+        if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }).then(go, go);
+        else go();
+      })();
+    </script>
   </head>
   <body>
     <div id="root">
@@ -57,6 +68,8 @@
           <li><b>Track your progress:</b> scores, saved words and a daily streak with your lion.</li>
         </ul>
         <p>Works in the browser on iPhone, Android and computers. Coming soon to the App Store and Google Play; until then, add it to your home screen as a web app (PWA): in Safari on iPhone tap Share → Add to Home Screen, in Chrome on Android tap ⋮ → Install app.</p>
+        <p style="margin: 24px 0 8px"><a href="/#/signup" style="display: block; text-align: center; background: #a4161a; color: #fff3e6; font-weight: 700; text-decoration: none; padding: 15px 18px; border-radius: 16px">Create a free account</a></p>
+        <p style="text-align: center; font-size: 14px; margin-top: 0">Already have one? <a href="/" style="color: #a4161a">Log in</a></p>
         <p>Made with free, openly licensed resources: Wiktionary, Lexique, Wikisource. <a href="/free-french-books/">Free French books to read aloud</a>.</p>
       </main>
     </div>
