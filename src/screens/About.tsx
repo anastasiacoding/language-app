@@ -3,7 +3,7 @@ import { Header } from "../components/ui";
 import { Lion } from "../components/Lion";
 
 export const APP_NAME = "French Lion";
-export const FEEDBACK_URL = "mailto:AnastasiaPotrashkova@gmail.com?subject=" + encodeURIComponent("French Lion feedback");
+export const FEEDBACK_URL = "mailto:hello@frenchlion.app?subject=" + encodeURIComponent("French Lion feedback");
 
 export default function About() {
   return (

@@ -2,7 +2,7 @@ import { Header } from "../components/ui";
 
 // Keep in sync with the Privacy Policy document. Fill in the controller details before publishing.
 const CONTROLLER = "Anastasia Potrashkova";
-const CONTACT = "AnastasiaPotrashkova@gmail.com";
+const CONTACT = "hello@frenchlion.app";
 
 export default function Privacy() {
   return (
