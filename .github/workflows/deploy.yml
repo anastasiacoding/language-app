@@ -39,3 +39,21 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # Tells Bing, Yandex and other IndexNow engines about the pages when their content changes.
+  indexnow:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Ping IndexNow if open pages changed
+        run: |
+          if [ "${{ github.event_name }}" != "workflow_dispatch" ] && ! git diff --name-only HEAD~1 HEAD | grep -qE '^(index\.html|public/llms\.txt|scripts/build-static-pages\.ts|src/data/rules\.ts)$'; then
+            echo "No open page changed, skipping"; exit 0
+          fi
+          sleep 30
+          URLS=$(curl -fsSL https://frenchlion.app/sitemap.xml | grep -o '<loc>[^<]*' | sed 's/<loc>//' | jq -R . | jq -sc .)
+          BODY=$(jq -nc --argjson urls "$URLS" '{host:"frenchlion.app",key:"d3edf66cd1189803be83d9f975e285b5",keyLocation:"https://frenchlion.app/d3edf66cd1189803be83d9f975e285b5.txt",urlList:$urls}')
+          curl -sS -o /dev/null -w "IndexNow: %{http_code}\n" -X POST https://api.indexnow.org/indexnow -H 'Content-Type: application/json; charset=utf-8' -d "$BODY"
