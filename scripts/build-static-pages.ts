@@ -32,6 +32,7 @@ td:first-child{color:var(--muted);width:42%}tr.hl td:last-child{color:var(--scar
 ul.rules{list-style:none;padding:0;margin:0}ul.rules li{padding:10px 0;border-bottom:1px solid var(--line)}ul.rules li:last-child{border:0}
 ul.rules a{font-weight:600;text-decoration:none}ul.rules span{color:var(--muted);font-size:14px;margin-left:6px}
 footer{margin-top:40px;font-size:13px;color:var(--muted)}
+ol.steps{margin:0;padding-left:22px}ol.steps li{padding:8px 0}ul.plain{margin:0;padding-left:18px}ul.plain li{padding:6px 0}
 `;
 
 function page(opts: { path: string; title: string; description: string; body: string; jsonld: object[] }) {
@@ -60,7 +61,7 @@ ${opts.jsonld.map((j) => `<script type="application/ld+json">${JSON.stringify(j)
 <main>
 <header><a href="/"><img src="/icon.svg" alt="" />French Lion</a></header>
 ${opts.body}
-<footer>French Lion is a free app to practice French: read texts aloud, translate and retell them, and drill grammar from A1 to B2. No ads. <a href="/">Open the app</a> · <a href="/grammar/">All grammar rules</a> · <a href="mailto:hello@frenchlion.app">hello@frenchlion.app</a></footer>
+<footer>French Lion is a free app to practice French: read texts aloud, translate and retell them, and drill grammar from A1 to B2. No ads. <a href="/">Open the app</a> · <a href="/read-french-aloud/">Read aloud</a> · <a href="/free-french-books/">Free books</a> · <a href="/grammar/">Grammar rules</a> · <a href="mailto:hello@frenchlion.app">hello@frenchlion.app</a></footer>
 </main>
 </body>
 </html>
@@ -122,6 +123,78 @@ ${sections}
   });
 }
 
+// ───────── Feature pages ─────────
+const SIGNUP = `<a class="cta" href="/#/signup">Create a free account</a>
+<p class="small" style="text-align:center">Free, no ads, no subscription. An account keeps your texts, words and progress in sync. Already have one? <a href="/">Log in</a></p>`;
+
+const steps = (items: [string, string][]) =>
+  `<div class="card"><ol class="steps">${items.map(([h, p]) => `<li><b>${h}</b><br />${p}</li>`).join("")}</ol></div>`;
+
+function readAloudPage() {
+  const path = "/read-french-aloud/";
+  const title = "Practice French pronunciation by reading aloud, with a score and IPA · French Lion";
+  const description = "Read any French text out loud and see which words came out right. Tap a word for its IPA, then translate and retell the text by voice. Free app, no ads.";
+  const body = `
+<nav class="crumbs"><a href="/">French Lion</a> › Read aloud</nav>
+<h1>Practice French pronunciation by reading aloud</h1>
+<p>Reading out loud is one of the simplest ways to train your mouth and your ear at the same time. French Lion listens while you read a French text and shows you which words came through clearly and which ones need another try.</p>
+<h2>How it works</h2>
+${steps([
+    ["Pick a text", "Choose a free classic from Wikisource, or add your own: a photo of a book page, a screenshot, a link to an article or plain pasted text."],
+    ["Read it out loud", "The text is split into short passages. Tap the mic and read. You get a reading accuracy score, and the words that weren’t recognised are highlighted."],
+    ["Check the sound of a word", "Tap any word to see its pronunciation in IPA and its meaning in English, then save it to your words."],
+    ["Translate and retell", "Say the translation in English, then retell the passage in your own French words. The retelling is checked for meaning, key words and grammar."],
+    ["Review your words", "Saved words come back in short reviews, with their IPA, so they stick."],
+  ])}
+<h2>Good to know</h2>
+<ul>
+<li>The score comes from your device’s speech recognition, which turns your speech into text. It’s a practical guide, not a phonetics exam. Recordings are never stored.</li>
+<li>Works in Safari and Chrome on iPhone, Android and computers. Use a quiet room and hold the phone close.</li>
+<li>Photos of book pages are recognised on your device and never uploaded.</li>
+</ul>
+<h2>What else is inside</h2>
+<p><a href="/grammar/">63 grammar rules from A1 to B2</a> with endless exercises, a noun gender checker (le or la for 17,000 nouns), every verb in every tense, and a daily streak with your lion.</p>
+${SIGNUP}`;
+  return page({
+    path, title, description, body,
+    jsonld: [{
+      "@context": "https://schema.org", "@type": "WebPage", name: "Practice French pronunciation by reading aloud", url: SITE + path, description,
+      about: { "@type": "WebApplication", name: "French Lion", url: SITE + "/", applicationCategory: "EducationalApplication", operatingSystem: "Web, iOS, Android", offers: { "@type": "Offer", price: "0", priceCurrency: "EUR" } },
+    }],
+  });
+}
+
+function freeBooksPage() {
+  const path = "/free-french-books/";
+  const title = "Free French books to read aloud: public-domain classics from Wikisource · French Lion";
+  const description = "Read free public-domain French books out loud: Hugo, Dumas, Maupassant, Verne, La Fontaine and more from Wikisource, split into short passages for practice.";
+  const body = `
+<nav class="crumbs"><a href="/">French Lion</a> › Free books</nav>
+<h1>Free French books to read aloud</h1>
+<p>Every text in French Lion’s library comes from open sources: books whose copyright has expired and that anyone can read, share and learn from. You search the library inside the app, pick a book, and it is split into chapters and short passages that you read out loud.</p>
+<h2>Where the texts come from</h2>
+<div class="card"><ul class="plain">
+<li><b><a href="https://fr.wikisource.org" rel="noopener">Wikisource</a></b> · the free library of the Wikimedia community, with tens of thousands of French texts in the public domain. Available now.</li>
+<li><b><a href="https://www.gutenberg.org" rel="noopener">Project Gutenberg</a></b> · one of the oldest free e-book libraries. Connected when its site is online.</li>
+<li><b><a href="https://gallica.bnf.fr" rel="noopener">Gallica</a></b> · the digital library of the Bibliothèque nationale de France. Coming soon; for now, take screenshots of its pages and add them as photos.</li>
+</ul></div>
+<h2>Ideas to start with</h2>
+<ul>
+<li><b>Short and gentle:</b> fables by Jean de La Fontaine, fairy tales by Charles Perrault.</li>
+<li><b>Short stories:</b> Guy de Maupassant, Alphonse Daudet’s <i lang="fr">Lettres de mon moulin</i>.</li>
+<li><b>Adventure:</b> Jules Verne, Alexandre Dumas.</li>
+<li><b>The big classics:</b> Victor Hugo, Émile Zola, Gustave Flaubert.</li>
+</ul>
+<p>Prefer something modern? Add your own text: a photo of a page from a book you own, a screenshot, a link to an article, or pasted text. Your texts stay private to your account.</p>
+<h2>Then practice with it</h2>
+<p>Read each passage out loud and get a score, tap any word for its <a href="/read-french-aloud/">pronunciation in IPA</a> and meaning, translate and retell it by voice, and drill the <a href="/grammar/">grammar</a> you meet along the way.</p>
+${SIGNUP}`;
+  return page({
+    path, title, description, body,
+    jsonld: [{ "@context": "https://schema.org", "@type": "WebPage", name: "Free French books to read aloud", url: SITE + path, description, isAccessibleForFree: true }],
+  });
+}
+
 // Same order as in the app: by level, then category.
 const ordered = LEVELS.flatMap((lv) => RULES.filter((r) => r.level === lv.id).sort((a, b) => CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category)));
 
@@ -132,8 +205,15 @@ ordered.forEach((r, i) => {
   writeFileSync(join(OUT, "grammar", r.id, "index.html"), rulePage(r, ordered[i - 1], ordered[i + 1]));
 });
 
+for (const [dir, html] of [["read-french-aloud", readAloudPage()], ["free-french-books", freeBooksPage()]]) {
+  mkdirSync(join(OUT, dir), { recursive: true });
+  writeFileSync(join(OUT, dir, "index.html"), html);
+}
+
 const urls = [
   { loc: "/", freq: "weekly", pri: "1.0" },
+  { loc: "/read-french-aloud/", freq: "monthly", pri: "0.9" },
+  { loc: "/free-french-books/", freq: "monthly", pri: "0.9" },
   { loc: "/grammar/", freq: "monthly", pri: "0.9" },
   ...ordered.map((r) => ({ loc: `/grammar/${r.id}/`, freq: "monthly", pri: "0.7" })),
 ];

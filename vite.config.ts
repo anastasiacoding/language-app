@@ -28,8 +28,8 @@ export default defineConfig({
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,woff2}"],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-        // Open grammar pages are plain HTML for search engines: never answer them with the app shell.
-        navigateFallbackDenylist: [/\/grammar\//],
+        // Open content pages are plain HTML for search engines: never answer them with the app shell.
+        navigateFallbackDenylist: [/\/(grammar|read-french-aloud|free-french-books)\//],
         runtimeCaching: [{ urlPattern: /\/(ipa|gloss)\/[a-z_]{2}\.json$/, handler: "StaleWhileRevalidate", options: { cacheName: "dictionaries", expiration: { maxEntries: 800 } } }],
       },
     }),

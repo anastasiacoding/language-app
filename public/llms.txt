@@ -21,3 +21,5 @@
 
 ## Grammar reference
 All 63 French grammar rules (A1–B2) are open to read, with tables and examples: https://frenchlion.app/grammar/
+Practice pronunciation by reading aloud: https://frenchlion.app/read-french-aloud/
+Free public-domain French books (Wikisource, Gutenberg): https://frenchlion.app/free-french-books/
