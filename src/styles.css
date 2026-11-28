@@ -92,8 +92,12 @@ textarea.input { height: auto; min-height: 160px; padding: 12px 16px; resize: ve
 .tabbar a.on { color: var(--scarlet); font-weight: 600; }
 /* wider than a phone: the tab bar floats as a soft rounded card, like the rest of the app */
 @media (min-width: 520px) {
-  .tabbar { bottom: 16px; width: calc(100% - 32px); max-width: 448px; border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 14px 10px; box-shadow: 0 6px 24px rgba(58, 38, 32, 0.08); }
-  .screen { padding-bottom: 120px; }
+  /* same width as the content column (480px app minus 22px padding on each side) */
+  .tabbar { bottom: 16px; width: calc(min(100vw, 480px) - 44px); max-width: none; border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 14px 10px; box-shadow: 0 6px 24px rgba(58, 38, 32, 0.08); }
+  /* the list fades into the background under the floating bar */
+  .app:has(.tabbar)::after { content: ""; position: fixed; z-index: 9; left: 50%; transform: translateX(-50%); bottom: 0; width: min(100vw, 480px); height: 110px; background: linear-gradient(to top, var(--bg) 55%, rgba(248, 245, 242, 0)); pointer-events: none; }
+  .screen { padding-bottom: 130px; }
+}
 }
 
 .header { display: flex; align-items: center; gap: 10px; }
