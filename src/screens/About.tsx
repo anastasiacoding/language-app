@@ -32,6 +32,9 @@ export default function About() {
       <h2>Free and private</h2>
       <p>{APP_NAME} is a personal, non-commercial project: free, with no ads. It uses free and openly licensed resources (Wiktionary, Lexique, Wikisource) and keeps only what it needs to save your progress. <Link to="/privacy">Privacy policy</Link></p>
 
+      <h2>On your phone</h2>
+      <p>{APP_NAME} is coming soon to the App Store and Google Play. Until then, you can add it to your home screen and use it like an app. <Link to="/install">How to install</Link></p>
+
       <h2>Tell me what you think</h2>
       <p>Something not working, a word that’s wrong, an idea for a new exercise? <a href={FEEDBACK_URL}>Send feedback</a> and I’ll read every message.</p>
     </div>

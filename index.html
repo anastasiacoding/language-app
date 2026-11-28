@@ -10,10 +10,56 @@
     <link rel="icon" href="icon.svg" type="image/svg+xml" />
     <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <title>French Lion</title>
+
+    <title>French Lion · Free app to practice French: reading aloud, grammar, genders, conjugation</title>
+    <meta name="description" content="French Lion is a free app to practice French. Read any French text out loud and get a pronunciation score, translate and retell it, drill grammar rules from A1 to B2 with endless exercises, and check noun genders and verb conjugations in every tense." />
+    <meta name="keywords" content="learn French, practice French, French app, free French app, French reading aloud, French pronunciation, French grammar exercises, French noun gender, le or la, French verb conjugation, conjugaison, A1 A2 B1 B2 French" />
+    <link rel="canonical" href="https://frenchlion.app/" />
+    <meta name="robots" content="index, follow" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="French Lion" />
+    <meta property="og:title" content="French Lion · Free app to practice French" />
+    <meta property="og:description" content="Read French aloud and get a score, drill grammar from A1 to B2, check noun genders and verb conjugations. Free, no ads." />
+    <meta property="og:url" content="https://frenchlion.app/" />
+    <meta property="og:image" content="https://frenchlion.app/icon-512.png" />
+    <meta name="twitter:card" content="summary" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "French Lion",
+        "url": "https://frenchlion.app/",
+        "description": "A free app to practice French: read texts aloud with a pronunciation score, translate and retell them, practice grammar rules from A1 to B2 with endless exercises, and check noun genders and verb conjugations.",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Any (web app, works on iPhone, Android and desktop)",
+        "inLanguage": "en",
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+        "educationalLevel": ["A1", "A2", "B1", "B2"],
+        "teaches": ["French reading and pronunciation", "French grammar", "French noun genders", "French verb conjugation"],
+        "image": "https://frenchlion.app/icon-512.png"
+      }
+    </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Shown until the app starts, and read by search engines and AI assistants that don't run JavaScript. -->
+      <main style="max-width: 480px; margin: 0 auto; padding: 48px 22px; font-family: Montserrat, system-ui, sans-serif; color: #2b1d18; line-height: 1.5">
+        <h1>French Lion: a free app to practice French</h1>
+        <p>Yes, another language app, but this one is free and has no ads. Practice French at your own pace:</p>
+        <ul>
+          <li><b>Read aloud:</b> add any French text (a photo of a book page, a screenshot, a link or a paste), read it out loud and get a pronunciation score, with the IPA transcription of every word.</li>
+          <li><b>Translate and retell:</b> translate the text by voice and retell it in French, with a grammar check.</li>
+          <li><b>Grammar from A1 to B2:</b> 63 rules (articles, passé composé, imparfait, subjonctif, pronouns, si clauses and more) with endless practice.</li>
+          <li><b>Check genders and conjugations:</b> le or la for 17,000 nouns, every verb in every tense.</li>
+          <li><b>Track your progress:</b> scores, saved words and a daily streak with your lion.</li>
+        </ul>
+        <p>Works in the browser on iPhone, Android and computers. Coming soon to the App Store and Google Play; until then, add it to your home screen as a web app (PWA): in Safari on iPhone tap Share → Add to Home Screen, in Chrome on Android tap ⋮ → Install app.</p>
+        <p>Made with free, openly licensed resources: Wiktionary, Lexique, Wikisource.</p>
+      </main>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -6,6 +6,7 @@ import { supabaseLinks } from "../lib/supabase";
 import { Seg } from "../components/ui";
 
 const redirectTo = () => window.location.origin + window.location.pathname;
+const standalone = typeof window !== "undefined" && (window.matchMedia?.("(display-mode: standalone)").matches || (navigator as any).standalone === true);
 
 function Brand() {
   return <img src={import.meta.env.BASE_URL + "app-icon.svg"} width={64} height={64} alt="" style={{ borderRadius: 16 }} />;
@@ -73,7 +74,7 @@ export function SignUp() {
     <form className="screen" onSubmit={submit}>
       <AuthTop mode="signup" />
       <h1>Bienvenue !</h1>
-      <p className="muted small">Practice reading, grammar and conjugation. Make yourself proud.</p>
+      <p className="muted small">Yet another language app, except this one is free. Read French out loud, drill grammar rules, and check noun genders and verb conjugations, at your own pace.</p>
       <label className="field"><span>Name</span><input className="input" value={name} onChange={(e) => setName(e.target.value)} autoComplete="given-name" /></label>
       <label className="field"><span>Email</span><input className="input" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" /></label>
       <label className="field"><span>Password</span><input className="input" type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" /></label>
@@ -111,6 +112,7 @@ export function LogIn() {
   return (
     <form className="screen" onSubmit={submit}>
       <AuthTop mode="login" />
+      <p className="small muted" style={{ margin: 0 }}>Welcome to yet another language app, except this one is free. Read French out loud, drill grammar rules, and check noun genders and verb conjugations, at your own pace.</p>
       {linkError && (
         <div className="card" style={{ borderColor: "var(--scarlet)", gap: 8 }}>
           <p className="small" style={{ margin: 0 }}>{linkError}</p>
@@ -124,6 +126,13 @@ export function LogIn() {
       <button className="btn primary" disabled={busy}>{busy ? "Logging in…" : "Log in"}</button>
       <Link className="btn ghost" to="/reset">Forgot password?</Link>
       <p className="center small muted">New here? <Link to="/signup" style={{ fontWeight: 600 }}>Create an account</Link></p>
+
+      {!standalone && (
+        <div className="card tint" style={{ marginTop: 6, gap: 6 }}>
+          <b className="small">Coming soon to the App Store and Google Play</b>
+          <p className="small" style={{ margin: 0 }}>For now, add French Lion to your phone’s home screen: it opens like a regular app. <Link to="/install" style={{ fontWeight: 600 }}>How to install</Link></p>
+        </div>
+      )}
       <p className="center xs"><Link to="/about" style={{ color: "var(--muted)" }}>About the app</Link></p>
     </form>
   );
