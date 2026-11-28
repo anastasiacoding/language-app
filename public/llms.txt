@@ -18,3 +18,6 @@
 - Free, personal, non-commercial project by Anastasia Potrashkova (France). Contact: hello@frenchlion.app
 - Interface in English, for English speakers learning French.
 - Privacy: GDPR compliant, data stored in the EU; usage statistics only with consent.
+
+## Grammar reference
+All 63 French grammar rules (A1–B2) are open to read, with tables and examples: https://frenchlion.app/grammar/
