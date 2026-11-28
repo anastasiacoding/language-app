@@ -21,7 +21,9 @@ function AuthTop({ mode }: { mode: "login" | "signup" }) {
         <img src={import.meta.env.BASE_URL + "app-icon.svg"} width={44} height={44} alt="" style={{ borderRadius: 12 }} />
         <b style={{ fontSize: 20 }}>French Lion</b>
       </div>
-      <Seg items={[{ id: "login", label: "Log in" }, { id: "signup", label: "Create account" }]} value={mode} onChange={(m: string) => nav(m === "login" ? "/" : "/signup", { replace: true })} />
+      <div data-nosnippet style={{ display: "contents" }}>
+        <Seg items={[{ id: "login", label: "Log in" }, { id: "signup", label: "Create account" }]} value={mode} onChange={(m: string) => nav(m === "login" ? "/" : "/signup", { replace: true })} />
+      </div>
     </>
   );
 }
@@ -119,6 +121,8 @@ export function LogIn() {
           <Link className="btn sm" to="/reset" onClick={() => setLinkError("")}>Send a new link</Link>
         </div>
       )}
+      {/* data-nosnippet: search engines describe the app, not the login form */}
+      <div data-nosnippet style={{ display: "contents" }}>
       <h1>Bon retour !</h1>
       <label className="field"><span>Email</span><input className="input" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" /></label>
       <label className="field"><span>Password</span><input className="input" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" /></label>
@@ -126,6 +130,7 @@ export function LogIn() {
       <button className="btn primary" disabled={busy}>{busy ? "Logging in…" : "Log in"}</button>
       <Link className="btn ghost" to="/reset">Forgot password?</Link>
       <p className="center small muted">New here? <Link to="/signup" style={{ fontWeight: 600 }}>Create an account</Link></p>
+      </div>
 
       {!standalone && (
         <div className="card tint" style={{ marginTop: 6, gap: 6 }}>
@@ -133,8 +138,20 @@ export function LogIn() {
           <p className="small" style={{ margin: 0 }}>For now, add French Lion to your phone’s home screen: it opens like a regular app. <Link to="/install" style={{ fontWeight: 600 }}>How to install</Link></p>
         </div>
       )}
-      <p className="center xs"><Link to="/about" style={{ color: "var(--muted)" }}>About the app</Link></p>
+      <ExploreLinks />
     </form>
+  );
+}
+
+/** Real links to the open pages: a menu for visitors, search engines and AI assistants. */
+export function ExploreLinks() {
+  const base = import.meta.env.BASE_URL;
+  const links: [string, string][] = [[base + "grammar/", "French grammar A1–B2"], [base + "read-french-aloud/", "Read French aloud"], [base + "free-french-books/", "Free French books"]];
+  return (
+    <nav aria-label="Explore" className="center xs" style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "6px 14px" }}>
+      {links.map(([href, label]) => <a key={href} href={href} style={{ color: "var(--muted)" }}>{label}</a>)}
+      <Link to="/about" style={{ color: "var(--muted)" }}>About the app</Link>
+    </nav>
   );
 }
 

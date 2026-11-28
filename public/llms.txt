@@ -2,6 +2,12 @@
 
 > French Lion (https://frenchlion.app) is a free web app to practice French, with no ads. It runs in the browser on iPhone, Android and computers, and can be added to the home screen like an app.
 
+## Pages
+- [French Lion app](https://frenchlion.app/): log in or create a free account
+- [French grammar A1–B2](https://frenchlion.app/grammar/): all 63 rules, open to read, with tables and examples; each rule has its own page, e.g. https://frenchlion.app/grammar/subjonctif/
+- [Read French aloud](https://frenchlion.app/read-french-aloud/): how pronunciation practice works (score, IPA, translate and retell)
+- [Free French books](https://frenchlion.app/free-french-books/): public-domain texts from Wikisource and Project Gutenberg
+
 ## What you can do
 - Read aloud: add any French text (photo or screenshot of a book page, a link to an open web page, a free book from Wikisource, or pasted text), read it out loud and get a pronunciation score. Tap any word to see its IPA transcription.
 - Translate by voice and retell the text in French; the retelling is scored on suggested words, meaning and grammar.
@@ -18,8 +24,3 @@
 - Free, personal, non-commercial project by Anastasia Potrashkova (France). Contact: hello@frenchlion.app
 - Interface in English, for English speakers learning French.
 - Privacy: GDPR compliant, data stored in the EU; usage statistics only with consent.
-
-## Grammar reference
-All 63 French grammar rules (A1–B2) are open to read, with tables and examples: https://frenchlion.app/grammar/
-Practice pronunciation by reading aloud: https://frenchlion.app/read-french-aloud/
-Free public-domain French books (Wikisource, Gutenberg): https://frenchlion.app/free-french-books/

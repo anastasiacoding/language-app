@@ -13,11 +13,14 @@ const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
 const clip = (s: string, n: number) => (s.length <= n ? s : s.slice(0, s.lastIndexOf(" ", n - 1)) + "…");
 const levelName = (l: Level) => LEVELS.find((x) => x.id === l)!.name;
 
+const MENU: [string, string][] = [["/grammar/", "Grammar A1–B2"], ["/read-french-aloud/", "Read aloud"], ["/free-french-books/", "Free books"], ["/", "Open the app"]];
+
 const CSS = `
 :root{--scarlet:#a4161a;--soft:#f6e3e1;--brass:#c39a4e;--bg:#f8f5f2;--card:#fff;--line:#e8e2dc;--text:#2b1d18;--muted:#6b5850;--on:#fff3e6}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:Montserrat,system-ui,-apple-system,sans-serif;line-height:1.55}
 main{max-width:680px;margin:0 auto;padding:28px 22px 64px}
-header{display:flex;align-items:center;gap:10px;margin-bottom:22px}header a{display:flex;align-items:center;gap:10px;color:var(--text);text-decoration:none;font-weight:700}
+header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+nav.menu{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}nav.menu a{font-size:14px;font-weight:600;text-decoration:none;color:var(--text);background:var(--card);border:1px solid var(--line);padding:6px 12px;border-radius:99px}nav.menu a[aria-current]{background:var(--scarlet);border-color:var(--scarlet);color:var(--on)}header a{display:flex;align-items:center;gap:10px;color:var(--text);text-decoration:none;font-weight:700}
 header img{width:36px;height:36px}
 nav.crumbs{font-size:14px;color:var(--muted);margin-bottom:6px}nav.crumbs a{color:var(--muted)}
 h1{font-size:30px;line-height:1.2;margin:4px 0 8px}h2{font-size:20px;margin:28px 0 10px}
@@ -60,6 +63,7 @@ ${opts.jsonld.map((j) => `<script type="application/ld+json">${JSON.stringify(j)
 <body>
 <main>
 <header><a href="/"><img src="/icon.svg" alt="" />French Lion</a></header>
+<nav class="menu" aria-label="Main">${MENU.map(([href, label]) => `<a href="${href}"${opts.path.startsWith(href) && href !== "/" ? ' aria-current="page"' : ""}>${label}</a>`).join("")}</nav>
 ${opts.body}
 <footer>French Lion is a free app to practice French: read texts aloud, translate and retell them, and drill grammar from A1 to B2. No ads. <a href="/">Open the app</a> · <a href="/read-french-aloud/">Read aloud</a> · <a href="/free-french-books/">Free books</a> · <a href="/grammar/">Grammar rules</a> · <a href="mailto:hello@frenchlion.app">hello@frenchlion.app</a></footer>
 </main>
